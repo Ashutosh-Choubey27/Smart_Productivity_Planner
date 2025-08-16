@@ -13,6 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { VoiceTaskInput } from '@/components/VoiceTaskInput';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 const taskSchema = z.object({
@@ -48,6 +50,7 @@ const commonCategories = [
 export const TaskForm = ({ onSubmit, editingTask, onEditComplete, trigger }: TaskFormProps) => {
   const [open, setOpen] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
+  const { toast } = useToast();
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -103,6 +106,16 @@ export const TaskForm = ({ onSubmit, editingTask, onEditComplete, trigger }: Tas
     }
   };
 
+  const handleVoiceInput = (text: string) => {
+    if (text.trim()) {
+      form.setValue('title', text.trim());
+      toast({
+        title: "Voice input captured!",
+        description: "Task title filled from voice input.",
+      });
+    }
+  };
+
   const defaultTrigger = (
     <Button className="bg-gradient-primary hover:bg-primary-hover text-primary-foreground shadow-medium">
       <Plus className="h-4 w-4 mr-2" />
@@ -139,7 +152,10 @@ export const TaskForm = ({ onSubmit, editingTask, onEditComplete, trigger }: Tas
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel className="flex items-center justify-between">
+                    Title
+                    <VoiceTaskInput onVoiceInput={handleVoiceInput} />
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="Enter task title..." 
