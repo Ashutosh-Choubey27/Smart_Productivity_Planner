@@ -4,6 +4,7 @@ import { useTask, Task } from '@/contexts/TaskContext';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskForm } from '@/components/TaskForm';
 import { TaskStats } from '@/components/TaskStats';
+import { TaskAnalytics } from '@/components/TaskAnalytics';
 import { TaskFilter, FilterType, PriorityFilter, SortType } from '@/components/TaskFilter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -162,6 +163,11 @@ export const Dashboard = () => {
 
         {/* Stats */}
         <TaskStats />
+
+        {/* Analytics Charts */}
+        <div className="mb-6">
+          <TaskAnalytics />
+        </div>
 
         {/* Filters */}
         <TaskFilter
