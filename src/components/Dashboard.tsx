@@ -10,7 +10,11 @@ import { AchievementPanel } from '@/components/AchievementPanel';
 import { ProductivityHeatmap } from '@/components/ProductivityHeatmap';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { VoiceTaskInput } from '@/components/VoiceTaskInput';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { TaskFilter, FilterType, PriorityFilter, SortType } from '@/components/TaskFilter';
+import { DragDropTaskBoard } from '@/components/DragDropTaskBoard';
+import { SemesterPlanner } from '@/components/SemesterPlanner';
+import { ExportPanel } from '@/components/ExportPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -189,10 +193,19 @@ export const Dashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-7 mb-6">
             <TabsTrigger value="tasks" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Tasks
+            </TabsTrigger>
+            <TabsTrigger value="board" className="flex items-center gap-2">
+              🎯 Board
+            </TabsTrigger>
+            <TabsTrigger value="semester" className="flex items-center gap-2">
+              🎓 Semester
+            </TabsTrigger>
+            <TabsTrigger value="export" className="flex items-center gap-2">
+              📥 Export
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               📊 Analytics
@@ -291,6 +304,21 @@ export const Dashboard = () => {
             }} />
           </TabsContent>
 
+          {/* Board Tab */}
+          <TabsContent value="board" className="space-y-6">
+            <DragDropTaskBoard />
+          </TabsContent>
+
+          {/* Semester Tab */}
+          <TabsContent value="semester" className="space-y-6">
+            <SemesterPlanner />
+          </TabsContent>
+
+          {/* Export Tab */}
+          <TabsContent value="export" className="space-y-6">
+            <ExportPanel />
+          </TabsContent>
+
           {/* Achievements Tab */}
           <TabsContent value="achievements" className="space-y-6">
             <AchievementPanel />
@@ -305,6 +333,9 @@ export const Dashboard = () => {
             onEditComplete={() => setEditingTask(undefined)}
           />
         )}
+
+        {/* Offline Indicator */}
+        <OfflineIndicator />
       </div>
     </div>
   );

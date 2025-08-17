@@ -32,6 +32,8 @@ interface TaskFormProps {
   editingTask?: Task;
   onEditComplete?: () => void;
   trigger?: React.ReactNode;
+  defaultCategory?: string;
+  academicMode?: boolean;
 }
 
 const commonCategories = [
@@ -47,7 +49,14 @@ const commonCategories = [
   'Exercise'
 ];
 
-export const TaskForm = ({ onSubmit, editingTask, onEditComplete, trigger }: TaskFormProps) => {
+export const TaskForm = ({ 
+  onSubmit, 
+  editingTask, 
+  onEditComplete, 
+  trigger, 
+  defaultCategory = '',
+  academicMode = false 
+}: TaskFormProps) => {
   const [open, setOpen] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
   const { toast } = useToast();
@@ -58,7 +67,7 @@ export const TaskForm = ({ onSubmit, editingTask, onEditComplete, trigger }: Tas
       title: '',
       description: '',
       priority: 'medium',
-      category: '',
+      category: defaultCategory || '',
       dueDate: undefined
     }
   });
