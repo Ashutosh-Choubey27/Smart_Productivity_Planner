@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAchievement } from '@/contexts/AchievementContext';
 
 interface Column {
   id: string;
@@ -17,6 +18,7 @@ interface Column {
 
 export const DragDropTaskBoard = () => {
   const { tasks, updateTask, toggleTask, deleteTask } = useTask();
+  const { checkAchievements, userStats } = useAchievement();
   const [editingTask, setEditingTask] = useState<Task | undefined>();
 
   // Organize tasks into columns
@@ -57,6 +59,20 @@ export const DragDropTaskBoard = () => {
     
     if (task.completed !== shouldBeCompleted) {
       toggleTask(task.id);
+
+      // Predict updated tasks state and update achievements
+      const todayStr = new Date().toDateString();
+      const updatedTasks = tasks.map(t =>
+        t.id === task.id ? { ...t, completed: shouldBeCompleted, updatedAt: new Date() } : t
+      );
+      const completedToday = updatedTasks.filter(
+        t => t.completed && new Date(t.updatedAt).toDateString() === todayStr
+      ).length;
+
+      checkAchievements({
+        totalTasksCompleted: userStats.totalTasksCompleted + (shouldBeCompleted && !task.completed ? 1 : 0),
+        tasksCompletedToday: completedToday,
+      });
     }
   };
 
@@ -69,7 +85,7 @@ export const DragDropTaskBoard = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Task Board</h2>
         <Badge variant="secondary" className="text-sm">

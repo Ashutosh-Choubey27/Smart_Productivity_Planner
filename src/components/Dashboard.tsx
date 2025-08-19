@@ -130,7 +130,23 @@ export const Dashboard = () => {
   const handleToggleTask = (id: string) => {
     const task = tasks.find(t => t.id === id);
     toggleTask(id);
+
+    // Predict updated tasks state for today's completion count
+    const todayStr = new Date().toDateString();
+    const updatedTasks = tasks.map(t =>
+      t.id === id ? { ...t, completed: !t.completed, updatedAt: new Date() } : t
+    );
+    const completedToday = updatedTasks.filter(
+      t => t.completed && new Date(t.updatedAt).toDateString() === todayStr
+    ).length;
+
+    // Update achievements: increment lifetime on first completion toggle
     if (task) {
+      checkAchievements({
+        totalTasksCompleted: userStats.totalTasksCompleted + (task.completed ? 0 : 1),
+        tasksCompletedToday: completedToday,
+      });
+
       toast({
         title: task.completed ? "Task marked as pending" : "Task completed!",
         description: `"${task.title}" ${task.completed ? 'is now pending' : 'has been completed'}.`,
@@ -156,7 +172,7 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 animate-fade-in">
         {/* Header with Theme Toggle */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">

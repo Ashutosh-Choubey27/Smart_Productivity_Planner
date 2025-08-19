@@ -306,10 +306,18 @@ export const TaskForm = ({
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) => date < new Date()}
+                        disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
                         initialFocus
                         className="p-3 pointer-events-auto"
                       />
+                      <div className="flex items-center justify-between border-t p-2">
+                        <Button variant="ghost" size="sm" onClick={() => field.onChange(new Date())}>
+                          Today
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => field.onChange(undefined)}>
+                          Clear
+                        </Button>
+                      </div>
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
