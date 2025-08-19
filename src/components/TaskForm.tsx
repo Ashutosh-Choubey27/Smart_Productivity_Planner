@@ -262,7 +262,7 @@ export const TaskForm = ({
               />
             </div>
 
-            {form.watch('category') === '' && customCategory !== null && (
+            {form.watch('category') === 'custom' && (
               <div>
                 <Input
                   placeholder="Enter custom category..."
