@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -60,6 +60,7 @@ export const TaskForm = ({
   const [open, setOpen] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
   const { toast } = useToast();
+  const customInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -86,6 +87,16 @@ export const TaskForm = ({
   }, [editingTask, form]);
 
   const handleSubmit = (data: TaskFormData) => {
+    // Ensure custom category is named
+    if (data.category === 'custom' && !customCategory.trim()) {
+      toast({
+        title: 'Please name your category',
+        description: 'Enter a category name when selecting Custom.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> = {
       title: data.title,
       description: data.description || '',
@@ -109,6 +120,7 @@ export const TaskForm = ({
   const handleCategoryChange = (value: string) => {
     if (value === 'custom') {
       setCustomCategory('');
+      form.setValue('category', 'custom');
     } else {
       form.setValue('category', value);
       setCustomCategory('');
@@ -265,6 +277,8 @@ export const TaskForm = ({
             {form.watch('category') === 'custom' && (
               <div>
                 <Input
+                  ref={customInputRef}
+                  autoFocus
                   placeholder="Enter custom category..."
                   value={customCategory}
                   onChange={(e) => {

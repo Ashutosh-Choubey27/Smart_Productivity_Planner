@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Calendar, BookOpen, Clock, GraduationCap, Target, Plus } from 'lucide-react';
 import { useTask, Task } from '@/contexts/TaskContext';
-import { TaskForm } from '@/components/TaskForm';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -105,11 +105,6 @@ export const SemesterPlanner = () => {
             <p className="text-muted-foreground">Manage your academic tasks and deadlines</p>
           </div>
         </div>
-        <TaskForm 
-          onSubmit={handleAddAcademicTask}
-          defaultCategory="Computer Science"
-          academicMode={true}
-        />
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
