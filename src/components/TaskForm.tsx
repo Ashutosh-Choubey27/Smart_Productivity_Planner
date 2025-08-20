@@ -101,7 +101,7 @@ export const TaskForm = ({
       title: data.title,
       description: data.description || '',
       priority: data.priority,
-      category: data.category,
+      category: data.category === 'custom' ? customCategory.trim() : data.category,
       dueDate: data.dueDate,
       completed: editingTask?.completed || false
     };
@@ -283,7 +283,6 @@ export const TaskForm = ({
                   value={customCategory}
                   onChange={(e) => {
                     setCustomCategory(e.target.value);
-                    form.setValue('category', e.target.value);
                   }}
                   className="focus:ring-2 focus:ring-primary"
                 />

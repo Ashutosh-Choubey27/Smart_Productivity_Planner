@@ -116,7 +116,7 @@ export const SemesterPlanner = () => {
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-6 animate-enter">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -168,7 +168,7 @@ export const SemesterPlanner = () => {
         </TabsContent>
 
         {/* Subjects Tab */}
-        <TabsContent value="subjects" className="space-y-6">
+        <TabsContent value="subjects" className="space-y-6 animate-enter">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(subjectStats).map(([subject, stats]) => (
               <Card key={subject} className="hover:shadow-md transition-shadow">
@@ -207,7 +207,7 @@ export const SemesterPlanner = () => {
         </TabsContent>
 
         {/* Deadlines Tab */}
-        <TabsContent value="deadlines" className="space-y-6">
+        <TabsContent value="deadlines" className="space-y-6 animate-enter">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -253,7 +253,7 @@ export const SemesterPlanner = () => {
         </TabsContent>
 
         {/* Study Plan Tab */}
-        <TabsContent value="planning" className="space-y-6">
+        <TabsContent value="planning" className="space-y-6 animate-enter">
           <Card>
             <CardHeader>
               <CardTitle>Study Plan Suggestions</CardTitle>

@@ -143,7 +143,7 @@ export const AchievementPanel = () => {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="all" className="space-y-3 mt-4">
+          <TabsContent value="all" className="space-y-3 mt-4 animate-enter">
             {achievements.map(achievement => (
               <AchievementCard 
                 key={achievement.id} 
@@ -153,7 +153,7 @@ export const AchievementPanel = () => {
             ))}
           </TabsContent>
           
-          <TabsContent value="unlocked" className="space-y-3 mt-4">
+          <TabsContent value="unlocked" className="space-y-3 mt-4 animate-enter">
             {unlockedAchievements.length > 0 ? (
               unlockedAchievements.map(achievement => (
                 <AchievementCard key={achievement.id} achievement={achievement} />
@@ -167,7 +167,7 @@ export const AchievementPanel = () => {
             )}
           </TabsContent>
           
-          <TabsContent value="milestone" className="space-y-3 mt-4">
+          <TabsContent value="milestone" className="space-y-3 mt-4 animate-enter">
             {getAchievementsByCategory('milestone').map(achievement => (
               <AchievementCard 
                 key={achievement.id} 
@@ -177,7 +177,7 @@ export const AchievementPanel = () => {
             ))}
           </TabsContent>
           
-          <TabsContent value="streak" className="space-y-3 mt-4">
+          <TabsContent value="streak" className="space-y-3 mt-4 animate-enter">
             {getAchievementsByCategory('streak').map(achievement => (
               <AchievementCard 
                 key={achievement.id} 

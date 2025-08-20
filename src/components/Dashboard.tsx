@@ -236,7 +236,7 @@ export const Dashboard = () => {
           </TabsList>
 
           {/* Tasks Tab */}
-          <TabsContent value="tasks" className="space-y-6">
+          <TabsContent value="tasks" className="space-y-6 animate-enter">
             {/* Stats */}
             <TaskStats />
 
@@ -306,13 +306,13 @@ export const Dashboard = () => {
           </TabsContent>
 
           {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
+          <TabsContent value="analytics" className="space-y-6 animate-enter">
             <TaskAnalytics />
             <ProductivityHeatmap />
           </TabsContent>
 
           {/* Focus Tab */}
-          <TabsContent value="focus" className="space-y-6">
+          <TabsContent value="focus" className="space-y-6 animate-enter">
             <PomodoroTimer onFocusComplete={(minutes) => {
               checkAchievements({
                 totalFocusTime: userStats.totalFocusTime + minutes
@@ -321,22 +321,22 @@ export const Dashboard = () => {
           </TabsContent>
 
           {/* Board Tab */}
-          <TabsContent value="board" className="space-y-6">
+          <TabsContent value="board" className="space-y-6 animate-enter">
             <DragDropTaskBoard />
           </TabsContent>
 
           {/* Semester Tab */}
-          <TabsContent value="semester" className="space-y-6">
+          <TabsContent value="semester" className="space-y-6 animate-enter">
             <SemesterPlanner />
           </TabsContent>
 
           {/* Export Tab */}
-          <TabsContent value="export" className="space-y-6">
+          <TabsContent value="export" className="space-y-6 animate-enter">
             <ExportPanel />
           </TabsContent>
 
           {/* Achievements Tab */}
-          <TabsContent value="achievements" className="space-y-6">
+          <TabsContent value="achievements" className="space-y-6 animate-enter">
             <AchievementPanel />
           </TabsContent>
         </Tabs>
