@@ -17,8 +17,37 @@ import { VoiceTaskInput } from '@/components/VoiceTaskInput';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
+// Enhanced task name validation
+const validateTaskName = (title: string): boolean => {
+  // Check if it's not just whitespace or random characters
+  const trimmed = title.trim();
+  
+  // Must be at least 3 characters
+  if (trimmed.length < 3) return false;
+  
+  // Must contain at least one letter
+  if (!/[a-zA-Z]/.test(trimmed)) return false;
+  
+  // Should not be all numbers
+  if (/^\d+$/.test(trimmed)) return false;
+  
+  // Should not be meaningless repetitive characters
+  if (/^(.)\1{4,}$/.test(trimmed)) return false;
+  
+  // Should contain meaningful words (at least 60% letters)
+  const letterCount = (trimmed.match(/[a-zA-Z]/g) || []).length;
+  const letterRatio = letterCount / trimmed.length;
+  
+  return letterRatio >= 0.6;
+};
+
 const taskSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
+  title: z.string()
+    .min(1, 'Title is required')
+    .max(100, 'Title must be less than 100 characters')
+    .refine(validateTaskName, {
+      message: 'Please enter a meaningful task name (e.g., "Complete math assignment", "Study for chemistry exam")'
+    }),
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
   priority: z.enum(['low', 'medium', 'high']),
   category: z.string().min(1, 'Category is required'),
