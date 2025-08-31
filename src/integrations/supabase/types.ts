@@ -14,7 +14,158 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      productivity_metrics: {
+        Row: {
+          created_at: string
+          date: string
+          focus_time_minutes: number | null
+          id: string
+          productivity_score: number | null
+          tasks_completed: number | null
+          tasks_created: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          focus_time_minutes?: number | null
+          id?: string
+          productivity_score?: number | null
+          tasks_completed?: number | null
+          tasks_created?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          focus_time_minutes?: number | null
+          id?: string
+          productivity_score?: number | null
+          tasks_completed?: number | null
+          tasks_created?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          productivity_goals: number | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          productivity_goals?: number | null
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          productivity_goals?: number | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      task_suggestions: {
+        Row: {
+          applied: boolean | null
+          confidence_score: number | null
+          created_at: string
+          id: string
+          suggestion_text: string
+          suggestion_type: string
+          task_id: string | null
+          user_id: string
+        }
+        Insert: {
+          applied?: boolean | null
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          suggestion_text: string
+          suggestion_type: string
+          task_id?: string | null
+          user_id: string
+        }
+        Update: {
+          applied?: boolean | null
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          suggestion_text?: string
+          suggestion_type?: string
+          task_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_suggestions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          category: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
