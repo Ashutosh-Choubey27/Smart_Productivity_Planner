@@ -8,13 +8,14 @@ export interface Task {
   category: string;
   dueDate?: Date;
   completed: boolean;
+  progress: number; // 0-100 percentage of completion
   createdAt: Date;
   updatedAt: Date;
 }
 
 interface TaskContextType {
   tasks: Task[];
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'progress'> & { progress?: number }) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   toggleTask: (id: string) => void;
@@ -50,7 +51,8 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
           ...task,
           createdAt: new Date(task.createdAt),
           updatedAt: new Date(task.updatedAt),
-          dueDate: task.dueDate ? new Date(task.dueDate) : undefined
+          dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+          progress: typeof task.progress === 'number' ? task.progress : 0
         }));
         setTasks(parsedTasks);
       } catch (error) {
@@ -66,12 +68,13 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
     }
   }, [tasks]);
 
-  const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'progress'> & { progress?: number }) => {
     const newTask: Task = {
       ...taskData,
       id: crypto.randomUUID(),
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      progress: typeof taskData.progress === 'number' ? Math.max(0, Math.min(100, taskData.progress)) : 0,
     };
     setTasks(prev => [newTask, ...prev]);
   };

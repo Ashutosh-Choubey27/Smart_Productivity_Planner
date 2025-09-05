@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Clock, Calendar, Trash2, Edit, CheckCircle2, Circle } from 'lucide-react';
-import { Task } from '@/contexts/TaskContext';
+import { Task, useTask } from '@/contexts/TaskContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
 
 interface TaskCardProps {
   task: Task;
@@ -15,6 +17,7 @@ interface TaskCardProps {
 
 export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const { updateTask } = useTask();
 
   const getPriorityColor = (priority: Task['priority']) => {
     switch (priority) {
@@ -132,6 +135,27 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
               <span>{dueDateInfo.text}</span>
             </div>
           )}
+        </div>
+
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-1 text-xs">
+            <span className="text-muted-foreground">Progress</span>
+            <span className="font-medium">{Math.round(task.progress ?? 0)}%</span>
+          </div>
+          <Progress value={task.progress ?? 0} />
+          <div className="mt-2">
+            <Slider
+              value={[task.progress ?? 0]}
+              min={0}
+              max={100}
+              step={1}
+              onValueChange={(v) => {
+                const value = Array.isArray(v) ? v[0] : 0;
+                updateTask(task.id, { progress: value });
+              }}
+              aria-label="Task progress"
+            />
+          </div>
         </div>
       </CardContent>
 

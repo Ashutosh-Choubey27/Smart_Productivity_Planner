@@ -17,28 +17,29 @@ import { VoiceTaskInput } from '@/components/VoiceTaskInput';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Enhanced task name validation
+// Enhanced task name validation (heuristic)
 const validateTaskName = (title: string): boolean => {
-  // Check if it's not just whitespace or random characters
-  const trimmed = title.trim();
-  
-  // Must be at least 3 characters
-  if (trimmed.length < 3) return false;
-  
-  // Must contain at least one letter
-  if (!/[a-zA-Z]/.test(trimmed)) return false;
-  
-  // Should not be all numbers
-  if (/^\d+$/.test(trimmed)) return false;
-  
-  // Should not be meaningless repetitive characters
-  if (/^(.)\1{4,}$/.test(trimmed)) return false;
-  
-  // Should contain meaningful words (at least 60% letters)
-  const letterCount = (trimmed.match(/[a-zA-Z]/g) || []).length;
-  const letterRatio = letterCount / trimmed.length;
-  
-  return letterRatio >= 0.6;
+  const t = title.trim();
+  if (t.length < 3) return false;
+  if (!/[A-Za-z]/.test(t)) return false; // must contain letters
+  if (!/[aeiou]/i.test(t)) return false; // must contain a vowel
+  if (/^(.)\1{3,}$/i.test(t)) return false; // same char repeated 4+ times
+  if (/[^A-Za-z0-9\s\-\'&]/.test(t)) return false; // disallow weird symbols
+
+  // Fast accept if starts with a common action verb
+  const verbs = /(plan|write|read|review|fix|build|clean|study|prepare|update|email|call|design|implement|test|deploy|research|organize|schedule|draft)\b/i;
+  if (verbs.test(t)) return true;
+
+  // Accept multi-word phrases (likely meaningful)
+  if (t.split(/\s+/).length >= 2) return true;
+
+  // Additional checks for single-word titles
+  const word = t.replace(/[^A-Za-z]/g, '');
+  if (/[bcdfghjklmnpqrstvwxyz]{5,}/i.test(word)) return false; // 5+ consonants in a row
+  if (/(.)\1{2,}/i.test(word)) return false; // triple repeated letters
+  if (word.length >= 12) return false; // very long single words are likely not descriptive
+
+  return true;
 };
 
 const taskSchema = z.object({
@@ -57,7 +58,7 @@ const taskSchema = z.object({
 type TaskFormData = z.infer<typeof taskSchema>;
 
 interface TaskFormProps {
-  onSubmit: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'completed'>) => void;
+  onSubmit: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'progress'> & { progress?: number }) => void;
   editingTask?: Task;
   onEditComplete?: () => void;
   trigger?: React.ReactNode;
@@ -126,7 +127,7 @@ export const TaskForm = ({
       return;
     }
 
-    const taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> = {
+    const taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'progress'> & { progress?: number } = {
       title: data.title,
       description: data.description || '',
       priority: data.priority,
