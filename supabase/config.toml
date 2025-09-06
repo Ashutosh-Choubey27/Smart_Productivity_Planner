@@ -1,1 +1,4 @@
 project_id = "soxtmznhpmbsndjcuhse"
+
+[functions.ai-task-suggestions]
+verify_jwt = true

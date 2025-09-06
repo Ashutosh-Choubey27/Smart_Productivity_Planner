@@ -11,6 +11,7 @@ import { ProductivityHeatmap } from '@/components/ProductivityHeatmap';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { VoiceTaskInput } from '@/components/VoiceTaskInput';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { AISuggestions } from '@/components/AISuggestions';
 import { TaskFilter, FilterType, PriorityFilter, SortType } from '@/components/TaskFilter';
 import { DragDropTaskBoard } from '@/components/DragDropTaskBoard';
 import { SemesterPlanner } from '@/components/SemesterPlanner';
@@ -239,6 +240,9 @@ export const Dashboard = () => {
           <TabsContent value="tasks" className="space-y-6 animate-enter">
             {/* Stats */}
             <TaskStats />
+            
+            {/* AI Suggestions */}
+            <AISuggestions />
 
             {/* Filters */}
             <TaskFilter
