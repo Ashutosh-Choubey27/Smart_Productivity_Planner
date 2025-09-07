@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { useTask } from '@/contexts/TaskContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getLocalUserId } from '@/utils/userStorage';
+import { isValidTaskTitle } from '@/utils/validation';
 
 interface AISuggestion {
   id: string;
@@ -25,13 +27,12 @@ export const AISuggestions = () => {
 
   const fetchSuggestions = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      const localUserId = getLocalUserId();
 
       const { data, error } = await supabase
         .from('task_suggestions')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', localUserId)
         .eq('applied', false)
         .order('created_at', { ascending: false })
         .limit(6);
@@ -46,15 +47,10 @@ export const AISuggestions = () => {
   const generateNewSuggestions = async () => {
     setRefreshing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Please sign in to get AI suggestions');
-      }
+      const localUserId = getLocalUserId();
 
       const { data, error } = await supabase.functions.invoke('ai-task-suggestions', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        }
+        body: { user_id: localUserId }
       });
 
       if (error) throw error;
@@ -81,6 +77,21 @@ export const AISuggestions = () => {
   const applySuggestion = async (suggestion: AISuggestion) => {
     setLoading(true);
     try {
+      // Validate the suggestion title before adding
+      if (!isValidTaskTitle(suggestion.suggestion_text)) {
+        toast({
+          title: "Invalid Suggestion",
+          description: "This AI suggestion doesn't meet our quality standards. Skipping...",
+        });
+        // Mark as applied to remove from UI
+        await supabase
+          .from('task_suggestions')
+          .update({ applied: true })
+          .eq('id', suggestion.id);
+        setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+        return;
+      }
+
       // Add as a task
       addTask({
         title: suggestion.suggestion_text,

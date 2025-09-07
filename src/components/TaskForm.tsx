@@ -16,37 +16,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { VoiceTaskInput } from '@/components/VoiceTaskInput';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { validateTaskTitle } from '@/utils/validation';
 
-// Enhanced task name validation (heuristic)
-const validateTaskName = (title: string): boolean => {
-  const t = title.trim();
-  if (t.length < 3) return false;
-  if (!/[A-Za-z]/.test(t)) return false; // must contain letters
-  if (!/[aeiou]/i.test(t)) return false; // must contain a vowel
-  if (/^(.)\1{3,}$/i.test(t)) return false; // same char repeated 4+ times
-  if (/[^A-Za-z0-9\s\-\'&]/.test(t)) return false; // disallow weird symbols
-
-  // Fast accept if starts with a common action verb
-  const verbs = /(plan|write|read|review|fix|build|clean|study|prepare|update|email|call|design|implement|test|deploy|research|organize|schedule|draft)\b/i;
-  if (verbs.test(t)) return true;
-
-  // Accept multi-word phrases (likely meaningful)
-  if (t.split(/\s+/).length >= 2) return true;
-
-  // Additional checks for single-word titles
-  const word = t.replace(/[^A-Za-z]/g, '');
-  if (/[bcdfghjklmnpqrstvwxyz]{5,}/i.test(word)) return false; // 5+ consonants in a row
-  if (/(.)\1{2,}/i.test(word)) return false; // triple repeated letters
-  if (word.length >= 12) return false; // very long single words are likely not descriptive
-
-  return true;
-};
 
 const taskSchema = z.object({
   title: z.string()
     .min(1, 'Title is required')
     .max(100, 'Title must be less than 100 characters')
-    .refine(validateTaskName, {
+    .refine((title) => validateTaskTitle(title).isValid, {
       message: 'Please enter a meaningful task name (e.g., "Complete math assignment", "Study for chemistry exam")'
     }),
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
