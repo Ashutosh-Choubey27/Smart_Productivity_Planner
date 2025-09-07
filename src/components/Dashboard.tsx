@@ -12,6 +12,9 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { VoiceTaskInput } from '@/components/VoiceTaskInput';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { AISuggestions } from '@/components/AISuggestions';
+import { AITaskBreakdown } from '@/components/AITaskBreakdown';
+import { AITimeEstimator } from '@/components/AITimeEstimator';
+import { AISmartScheduler } from '@/components/AISmartScheduler';
 import { TaskFilter, FilterType, PriorityFilter, SortType } from '@/components/TaskFilter';
 import { DragDropTaskBoard } from '@/components/DragDropTaskBoard';
 import { SemesterPlanner } from '@/components/SemesterPlanner';
@@ -210,13 +213,16 @@ export const Dashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 mb-6">
+          <TabsList className="grid w-full grid-cols-8 mb-6">
             <TabsTrigger value="tasks" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Tasks
             </TabsTrigger>
             <TabsTrigger value="board" className="flex items-center gap-2">
               🎯 Board
+            </TabsTrigger>
+            <TabsTrigger value="ai" className="flex items-center gap-2">
+              🤖 AI Tools
             </TabsTrigger>
             <TabsTrigger value="semester" className="flex items-center gap-2">
               🎓 Semester
@@ -327,6 +333,29 @@ export const Dashboard = () => {
           {/* Board Tab */}
           <TabsContent value="board" className="space-y-6 animate-enter">
             <DragDropTaskBoard />
+          </TabsContent>
+
+          {/* AI Tools Tab */}
+          <TabsContent value="ai" className="space-y-6 animate-enter">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AISuggestions />
+              <AISmartScheduler />
+            </div>
+            
+            {/* Task Enhancement Tools */}
+            {tasks.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <AITaskBreakdown 
+                  taskTitle={tasks.filter(t => !t.completed)[0]?.title || "Sample Task"}
+                  taskDescription={tasks.filter(t => !t.completed)[0]?.description}
+                />
+                <AITimeEstimator 
+                  taskTitle={tasks.filter(t => !t.completed)[0]?.title || "Sample Task"}
+                  taskDescription={tasks.filter(t => !t.completed)[0]?.description}
+                  taskCategory={tasks.filter(t => !t.completed)[0]?.category}
+                />
+              </div>
+            )}
           </TabsContent>
 
           {/* Semester Tab */}

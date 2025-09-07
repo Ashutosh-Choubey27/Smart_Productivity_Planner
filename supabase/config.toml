@@ -1,4 +1,10 @@
 project_id = "soxtmznhpmbsndjcuhse"
 
 [functions.ai-task-suggestions]
-verify_jwt = true
+verify_jwt = false
+
+[functions.ai-task-breakdown]
+verify_jwt = false
+
+[functions.ai-time-estimator]
+verify_jwt = false

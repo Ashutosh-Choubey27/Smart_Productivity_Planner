@@ -24,31 +24,22 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    // Get user from auth header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
+    // Get user_id from request body instead of auth header
+    const { user_id } = await req.json();
+    if (!user_id) {
+      throw new Error('user_id is required');
     }
 
-    const { data: { user } } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (!user) {
-      throw new Error('Unauthorized');
-    }
-
-    console.log('Generating AI suggestions for user:', user.id);
+    console.log('Generating AI suggestions for local user:', user_id);
 
     // Fetch user's tasks to analyze patterns
     const { data: tasks, error: tasksError } = await supabaseClient
       .from('tasks')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user_id)
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -66,7 +57,7 @@ serve(async (req) => {
     // Store suggestions in database
     const suggestionPromises = suggestions.map(suggestion => 
       supabaseClient.from('task_suggestions').insert({
-        user_id: user.id,
+        user_id: user_id,
         suggestion_type: suggestion.type,
         suggestion_text: suggestion.text,
         confidence_score: suggestion.confidence
