@@ -57,10 +57,6 @@ serve(async (req) => {
       tasks = dbTasks || [];
     }
 
-    if (tasksError) {
-      console.error('Error fetching tasks:', tasksError);
-      throw tasksError;
-    }
 
     // Analyze task patterns
     const analysis = analyzeTaskPatterns(tasks || []);
