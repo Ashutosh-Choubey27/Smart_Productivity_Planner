@@ -27,21 +27,35 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    // Get user_id from request body instead of auth header
-    const { user_id } = await req.json();
-    if (!user_id) {
-      throw new Error('user_id is required');
+    // Get user_id and/or tasks from request body
+    const { user_id, tasks: clientTasks, persist } = await req.json();
+    
+    if (!user_id && (!clientTasks || clientTasks.length === 0)) {
+      throw new Error('Either user_id or tasks must be provided');
     }
-
-    console.log('Generating AI suggestions for local user:', user_id);
-
-    // Fetch user's tasks to analyze patterns
-    const { data: tasks, error: tasksError } = await supabaseClient
-      .from('tasks')
-      .select('*')
-      .eq('user_id', user_id)
-      .order('created_at', { ascending: false })
-      .limit(50);
+    
+    console.log('Generating AI suggestions for local user:', user_id ?? 'anonymous');
+    
+    let tasks: any[] = [];
+    
+    if (Array.isArray(clientTasks) && clientTasks.length > 0) {
+      tasks = clientTasks;
+    } else if (user_id) {
+      // Fetch user's tasks to analyze patterns (DB)
+      const { data: dbTasks, error: tasksError } = await supabaseClient
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user_id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+    
+      if (tasksError) {
+        console.error('Error fetching tasks:', tasksError);
+        throw tasksError;
+      }
+    
+      tasks = dbTasks || [];
+    }
 
     if (tasksError) {
       console.error('Error fetching tasks:', tasksError);
@@ -54,17 +68,19 @@ serve(async (req) => {
     // Generate AI suggestions using OpenAI
     const suggestions = await generateAISuggestions(analysis, tasks || []);
 
-    // Store suggestions in database
-    const suggestionPromises = suggestions.map(suggestion => 
-      supabaseClient.from('task_suggestions').insert({
-        user_id: user_id,
-        suggestion_type: suggestion.type,
-        suggestion_text: suggestion.text,
-        confidence_score: suggestion.confidence
-      })
-    );
+    // Optionally store suggestions in database
+    if (persist && user_id) {
+      const suggestionPromises = suggestions.map(suggestion => 
+        supabaseClient.from('task_suggestions').insert({
+          user_id: user_id,
+          suggestion_type: suggestion.type,
+          suggestion_text: suggestion.text,
+          confidence_score: suggestion.confidence
+        })
+      );
 
-    await Promise.all(suggestionPromises);
+      await Promise.all(suggestionPromises);
+    }
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -87,17 +103,21 @@ serve(async (req) => {
 });
 
 function analyzeTaskPatterns(tasks: any[]): TaskAnalysis {
-  const completed = tasks.filter(t => t.completed);
-  const pending = tasks.filter(t => !t.completed);
+  const completed = tasks.filter((t: any) => t.completed);
+  const pending = tasks.filter((t: any) => !t.completed);
   
   // Calculate average completion time for completed tasks
   const completionTimes = completed
-    .filter(t => t.completed_at && t.created_at)
-    .map(t => {
-      const created = new Date(t.created_at).getTime();
-      const completedAt = new Date(t.completed_at).getTime();
+    .map((t: any) => {
+      const createdRaw = (t.created_at ?? t.createdAt ?? null);
+      const completedRaw = (t.completed_at ?? t.completedAt ?? null);
+      if (!createdRaw || !completedRaw) return null;
+      const created = new Date(createdRaw).getTime();
+      const completedAt = new Date(completedRaw).getTime();
+      if (isNaN(created) || isNaN(completedAt)) return null;
       return (completedAt - created) / (1000 * 60 * 60 * 24); // days
-    });
+    })
+    .filter((v: number | null): v is number => typeof v === 'number');
   
   const avgCompletionTime = completionTimes.length > 0 
     ? completionTimes.reduce((a, b) => a + b, 0) / completionTimes.length 
@@ -105,27 +125,29 @@ function analyzeTaskPatterns(tasks: any[]): TaskAnalysis {
 
   // Find most active category
   const categoryCount: Record<string, number> = {};
-  tasks.forEach(t => {
-    categoryCount[t.category] = (categoryCount[t.category] || 0) + 1;
+  tasks.forEach((t: any) => {
+    const cat = t.category || 'general';
+    categoryCount[cat] = (categoryCount[cat] || 0) + 1;
   });
   
   const mostActiveCategory = Object.entries(categoryCount)
-    .sort(([,a], [,b]) => b - a)[0]?.[0] || 'work';
+    .sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || 'work';
 
   // Common priorities
   const priorityCount: Record<string, number> = {};
-  tasks.forEach(t => {
-    priorityCount[t.priority] = (priorityCount[t.priority] || 0) + 1;
+  tasks.forEach((t: any) => {
+    const pr = t.priority || 'medium';
+    priorityCount[pr] = (priorityCount[pr] || 0) + 1;
   });
   
   const commonPriorities = Object.entries(priorityCount)
-    .sort(([,a], [,b]) => b - a)
+    .sort(([,a], [,b]) => (b as number) - (a as number))
     .slice(0, 2)
     .map(([priority]) => priority);
 
   // Recent patterns (categories from last 10 tasks)
   const recentTasks = tasks.slice(0, 10);
-  const recentCategories = [...new Set(recentTasks.map(t => t.category))];
+  const recentCategories = [...new Set(recentTasks.map((t: any) => t.category || 'general'))];
 
   return {
     completedTasks: completed.length,

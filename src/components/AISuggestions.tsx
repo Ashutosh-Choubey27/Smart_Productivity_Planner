@@ -14,34 +14,18 @@ interface AISuggestion {
   suggestion_type: string;
   suggestion_text: string;
   confidence_score: number;
-  applied: boolean;
-  created_at: string;
 }
 
 export const AISuggestions = () => {
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const { addTask } = useTask();
+  const { addTask, tasks } = useTask();
   const { toast } = useToast();
 
   const fetchSuggestions = async () => {
-    try {
-      const localUserId = getLocalUserId();
-
-      const { data, error } = await supabase
-        .from('task_suggestions')
-        .select('*')
-        .eq('user_id', localUserId)
-        .eq('applied', false)
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      if (error) throw error;
-      setSuggestions(data || []);
-    } catch (error) {
-      console.error('Error fetching suggestions:', error);
-    }
+    // Local mode: no persisted suggestions to fetch
+    setSuggestions([]);
   };
 
   const generateNewSuggestions = async () => {
@@ -50,23 +34,31 @@ export const AISuggestions = () => {
       const localUserId = getLocalUserId();
 
       const { data, error } = await supabase.functions.invoke('ai-task-suggestions', {
-        body: { user_id: localUserId }
+        body: { user_id: localUserId, tasks, persist: false }
       });
 
       if (error) throw error;
 
-      if (data.success) {
-        await fetchSuggestions();
+      if (data?.success && Array.isArray(data.suggestions)) {
+        const mapped = data.suggestions.map((s: any) => ({
+          id: crypto.randomUUID(),
+          suggestion_type: s.type,
+          suggestion_text: s.text,
+          confidence_score: s.confidence,
+        }));
+        setSuggestions(mapped);
         toast({
           title: "AI Suggestions Generated!",
-          description: `Generated ${data.suggestions?.length || 0} new task suggestions based on your patterns.`,
+          description: `Generated ${mapped.length} new task suggestions based on your patterns.`,
         });
+      } else {
+        toast({ title: "No suggestions", description: "AI did not return suggestions this time." });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating suggestions:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to generate AI suggestions. Please try again.",
+        description: error?.message || "Failed to generate AI suggestions. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -83,11 +75,7 @@ export const AISuggestions = () => {
           title: "Invalid Suggestion",
           description: "This AI suggestion doesn't meet our quality standards. Skipping...",
         });
-        // Mark as applied to remove from UI
-        await supabase
-          .from('task_suggestions')
-          .update({ applied: true })
-          .eq('id', suggestion.id);
+        // Remove from UI only
         setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
         return;
       }
@@ -101,14 +89,6 @@ export const AISuggestions = () => {
         completed: false,
         progress: 0
       });
-
-      // Mark suggestion as applied
-      const { error } = await supabase
-        .from('task_suggestions')
-        .update({ applied: true })
-        .eq('id', suggestion.id);
-
-      if (error) throw error;
 
       // Remove from UI
       setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
@@ -130,23 +110,9 @@ export const AISuggestions = () => {
   };
 
   const dismissSuggestion = async (suggestion: AISuggestion) => {
-    try {
-      const { error } = await supabase
-        .from('task_suggestions')
-        .update({ applied: true }) // Mark as applied to hide it
-        .eq('id', suggestion.id);
-
-      if (error) throw error;
-
-      setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-      
-      toast({
-        title: "Suggestion Dismissed",
-        description: "The suggestion has been removed.",
-      });
-    } catch (error) {
-      console.error('Error dismissing suggestion:', error);
-    }
+    // Local mode: simply remove from list
+    setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+    toast({ title: "Suggestion Dismissed", description: "The suggestion has been removed." });
   };
 
   const getSuggestionTypeIcon = (type: string) => {
