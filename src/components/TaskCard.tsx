@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-import { Slider } from '@/components/ui/slider';
+
 
 interface TaskCardProps {
   task: Task;
@@ -138,24 +138,18 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
         </div>
 
         <div className="mt-3">
-          <div className="flex items-center justify-between mb-1 text-xs">
-            <span className="text-muted-foreground">Progress</span>
-            <span className="font-medium">{Math.round(task.progress ?? 0)}%</span>
+          <div className="flex items-center justify-between mb-2 text-xs">
+            <span className="text-muted-foreground font-medium">Status</span>
+            <span className={cn(
+              "font-semibold px-2 py-1 rounded-full text-xs",
+              task.completed 
+                ? "bg-success/10 text-success border border-success/20" 
+                : "bg-muted text-muted-foreground border border-border"
+            )}>
+              {task.completed ? "Complete" : "In Progress"}
+            </span>
           </div>
-          <Progress value={task.progress ?? 0} />
-          <div className="mt-2">
-            <Slider
-              value={[task.progress ?? 0]}
-              min={0}
-              max={100}
-              step={1}
-              onValueChange={(v) => {
-                const value = Array.isArray(v) ? v[0] : 0;
-                updateTask(task.id, { progress: value });
-              }}
-              aria-label="Task progress"
-            />
-          </div>
+          <Progress value={task.completed ? 100 : 0} />
         </div>
       </CardContent>
 

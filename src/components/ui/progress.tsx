@@ -10,17 +10,24 @@ const Progress = React.forwardRef<
   <ProgressPrimitive.Root
     ref={ref}
     className={cn(
-      "relative h-6 w-full overflow-hidden rounded-full bg-secondary/50 backdrop-blur-sm border border-border shadow-inner",
+      "relative h-3 w-full overflow-hidden rounded-full bg-secondary/30 backdrop-blur-sm border border-border/50 shadow-inner",
       className
     )}
     {...props}
   >
     <ProgressPrimitive.Indicator
-      className="h-full w-full flex-1 bg-gradient-progress shadow-glow rounded-full transition-all duration-700 ease-out relative overflow-hidden"
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+      className="h-full w-full flex-1 bg-gradient-to-r from-primary via-primary-hover to-primary rounded-full transition-all duration-1000 ease-out relative overflow-hidden shadow-sm"
+      style={{ 
+        transform: `translateX(-${100 - (value || 0)}%)`,
+        boxShadow: value && value > 0 ? '0 0 8px hsl(var(--primary) / 0.4)' : 'none'
+      }}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_2s_infinite]" />
+      {value && value > 0 && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_3s_infinite]" />
+          <div className="absolute inset-0 bg-primary/10 animate-pulse" />
+        </>
+      )}
     </ProgressPrimitive.Indicator>
   </ProgressPrimitive.Root>
 ))
