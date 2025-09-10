@@ -57,9 +57,14 @@
     --gradient-primary: linear-gradient(135deg, hsl(215 84% 45%), hsl(215 84% 55%));
     --gradient-hero: linear-gradient(135deg, hsl(215 84% 45%), hsl(25 95% 55%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(240 5% 98%));
+    --gradient-progress: linear-gradient(90deg, hsl(215 84% 45%), hsl(280 85% 60%), hsl(25 95% 55%));
+    --gradient-cool: linear-gradient(135deg, hsl(280 85% 60%), hsl(215 84% 55%), hsl(180 85% 55%));
+    --gradient-neon: linear-gradient(90deg, hsl(280 85% 60%), hsl(315 85% 65%));
     --shadow-soft: 0 2px 8px -2px hsl(240 10% 8% / 0.1);
     --shadow-medium: 0 4px 16px -4px hsl(240 10% 8% / 0.15);
     --shadow-large: 0 8px 32px -8px hsl(240 10% 8% / 0.2);
+    --shadow-glow: 0 0 20px hsl(215 84% 45% / 0.3);
+    --shadow-neon: 0 0 30px hsl(280 85% 60% / 0.4);
 
     --radius: 0.75rem;
 
@@ -132,9 +137,14 @@
     --gradient-primary: linear-gradient(135deg, hsl(215 84% 65%), hsl(215 84% 75%));
     --gradient-hero: linear-gradient(135deg, hsl(215 84% 65%), hsl(25 95% 65%));
     --gradient-card: linear-gradient(145deg, hsl(240 8% 12%), hsl(240 8% 15%));
+    --gradient-progress: linear-gradient(90deg, hsl(215 84% 65%), hsl(280 85% 70%), hsl(25 95% 65%));
+    --gradient-cool: linear-gradient(135deg, hsl(280 85% 70%), hsl(215 84% 65%), hsl(180 85% 65%));
+    --gradient-neon: linear-gradient(90deg, hsl(280 85% 70%), hsl(315 85% 75%));
     --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
     --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
     --shadow-large: 0 8px 32px -8px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 20px hsl(215 84% 65% / 0.4);
+    --shadow-neon: 0 0 30px hsl(280 85% 70% / 0.5);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -159,31 +169,31 @@
 @layer components {
   /* Task Components */
   .task-card {
-    @apply bg-card border border-border rounded-xl p-4 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-medium)] transition-all duration-300;
+    @apply bg-gradient-card border border-border rounded-xl p-4 shadow-soft hover:shadow-medium transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm;
   }
 
   .task-card-high {
-    @apply border-l-4 border-l-[hsl(var(--priority-high))];
+    @apply border-l-4 border-l-[hsl(var(--priority-high))] shadow-[0_0_10px_hsl(var(--priority-high)/0.2)];
   }
 
   .task-card-medium {
-    @apply border-l-4 border-l-[hsl(var(--priority-medium))];
+    @apply border-l-4 border-l-[hsl(var(--priority-medium))] shadow-[0_0_10px_hsl(var(--priority-medium)/0.2)];
   }
 
   .task-card-low {
-    @apply border-l-4 border-l-[hsl(var(--priority-low))];
+    @apply border-l-4 border-l-[hsl(var(--priority-low))] shadow-[0_0_10px_hsl(var(--priority-low)/0.2)];
   }
 
   .priority-badge-high {
-    @apply bg-[hsl(var(--priority-high))] text-white px-2 py-1 rounded-md text-xs font-medium;
+    @apply bg-gradient-to-r from-[hsl(var(--priority-high))] to-[hsl(var(--priority-high)/0.8)] text-white px-3 py-1 rounded-full text-xs font-medium shadow-glow;
   }
 
   .priority-badge-medium {
-    @apply bg-[hsl(var(--priority-medium))] text-white px-2 py-1 rounded-md text-xs font-medium;
+    @apply bg-gradient-to-r from-[hsl(var(--priority-medium))] to-[hsl(var(--priority-medium)/0.8)] text-white px-3 py-1 rounded-full text-xs font-medium shadow-glow;
   }
 
   .priority-badge-low {
-    @apply bg-[hsl(var(--priority-low))] text-white px-2 py-1 rounded-md text-xs font-medium;
+    @apply bg-gradient-to-r from-[hsl(var(--priority-low))] to-[hsl(var(--priority-low)/0.8)] text-white px-3 py-1 rounded-full text-xs font-medium shadow-glow;
   }
 }
 
