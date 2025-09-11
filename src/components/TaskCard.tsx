@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
 
 
 interface TaskCardProps {
@@ -138,18 +139,35 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
         </div>
 
         <div className="mt-3">
-          <div className="flex items-center justify-between mb-2 text-xs">
-            <span className="text-muted-foreground font-medium">Status</span>
+          <div className="flex items-center justify-between mb-1 text-xs">
+            <span className="text-muted-foreground font-medium">Progress</span>
+            <span className="font-semibold">{Math.round(task.progress ?? 0)}%</span>
+          </div>
+          <Progress value={task.progress ?? 0} className="mb-2" />
+          <div className="flex items-center gap-2">
+            <Slider
+              value={[task.progress ?? 0]}
+              min={0}
+              max={100}
+              step={5}
+              onValueChange={(v) => {
+                const value = Array.isArray(v) ? v[0] : 0;
+                updateTask(task.id, { progress: value });
+              }}
+              className="flex-1"
+              aria-label="Task progress"
+            />
             <span className={cn(
-              "font-semibold px-2 py-1 rounded-full text-xs",
+              "text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap",
               task.completed 
                 ? "bg-success/10 text-success border border-success/20" 
-                : "bg-muted text-muted-foreground border border-border"
+                : task.progress && task.progress > 0 
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "bg-muted text-muted-foreground border border-border"
             )}>
-              {task.completed ? "Complete" : "In Progress"}
+              {task.completed ? "Complete" : task.progress && task.progress > 0 ? "In Progress" : "Not Started"}
             </span>
           </div>
-          <Progress value={task.completed ? 100 : 0} />
         </div>
       </CardContent>
 
