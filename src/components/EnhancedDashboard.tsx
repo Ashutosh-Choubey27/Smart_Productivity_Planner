@@ -82,7 +82,7 @@ export const EnhancedDashboard: React.FC = () => {
               <Dashboard />
             </div>
             <div className="space-y-6">
-              <TaskStats />
+              <TaskStats compact />
               <AISuggestions />
             </div>
           </div>
@@ -95,7 +95,7 @@ export const EnhancedDashboard: React.FC = () => {
             <div className="grid md:grid-cols-2 gap-6">
               <TaskAnalytics />
               <div className="space-y-6">
-                <TaskStats />
+                <TaskStats compact />
               </div>
             </div>
           </div>
@@ -125,7 +125,7 @@ export const EnhancedDashboard: React.FC = () => {
           <div className="grid lg:grid-cols-2 gap-6">
             <FocusMode />
             <div className="space-y-6">
-              <TaskStats />
+              <TaskStats compact />
               <AISuggestions />
             </div>
           </div>

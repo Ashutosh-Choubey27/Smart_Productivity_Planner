@@ -2,7 +2,7 @@ import { CheckCircle2, Clock, AlertTriangle, Target } from 'lucide-react';
 import { useTask } from '@/contexts/TaskContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export const TaskStats = () => {
+export const TaskStats = ({ compact = false }: { compact?: boolean }) => {
   const { tasks, getCompletedTasks, getPendingTasks, getTasksByPriority } = useTask();
 
   const totalTasks = tasks.length;
@@ -44,17 +44,17 @@ export const TaskStats = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className={`grid gap-4 mb-6 ${compact ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
-          <Card key={stat.title} className="task-card hover:shadow-medium">
+          <Card key={stat.title} className="task-card hover:shadow-medium overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
               </CardTitle>
-              <div className={`${stat.bgColor} p-2 rounded-md`}>
-                <Icon className={`h-4 w-4 ${stat.color}`} />
+              <div className={`${stat.bgColor} p-2 rounded-md shrink-0`}>
+                <Icon className={`h-4 w-4 ${stat.color} shrink-0`} />
               </div>
             </CardHeader>
             <CardContent>
