@@ -56,6 +56,19 @@ const commonCategories = [
   'Exercise'
 ];
 
+const academicSubjects = [
+  'Mathematics', 'Physics', 'Chemistry', 'Computer Science', 'Data Structures & Algorithms',
+  'Database Management', 'Operating Systems', 'Computer Networks', 'Software Engineering',
+  'Web Development', 'Mobile Development', 'Machine Learning', 'Artificial Intelligence',
+  'Cybersecurity', 'Statistics', 'Linear Algebra', 'Discrete Mathematics', 'English',
+  'Economics', 'Management', 'Research Project', 'Internship', 'Placement Preparation'
+];
+
+const studyCategories = [
+  'Lecture Notes', 'Assignments', 'Lab Work', 'Project Work', 'Exam Preparation',
+  'Research', 'Reading', 'Practice Problems', 'Mock Tests', 'Group Study'
+];
+
 export const TaskForm = ({ 
   onSubmit, 
   editingTask, 
@@ -266,14 +279,14 @@ export const TaskForm = ({
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        {commonCategories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="custom">Custom...</SelectItem>
-                      </SelectContent>
+                       <SelectContent>
+                         {(academicMode ? [...academicSubjects, ...studyCategories] : commonCategories).map((category) => (
+                           <SelectItem key={category} value={category}>
+                             {category}
+                           </SelectItem>
+                         ))}
+                         <SelectItem value="custom">Custom...</SelectItem>
+                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>

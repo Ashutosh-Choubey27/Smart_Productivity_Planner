@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Calendar, BookOpen, Clock, GraduationCap, Target, Plus } from 'lucide-react';
+import { Calendar, BookOpen, Clock, GraduationCap, Target, Plus, Filter, BookOpenCheck, AlertCircle, HelpCircle } from 'lucide-react';
 import { useTask, Task } from '@/contexts/TaskContext';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TaskForm } from '@/components/TaskForm';
+import { SemesterGuide, useSemesterGuide } from '@/components/SemesterGuide';
 import { cn } from '@/lib/utils';
 
 const ACADEMIC_SUBJECTS = [
@@ -22,23 +25,69 @@ const STUDY_CATEGORIES = [
   'Research', 'Reading', 'Practice Problems', 'Mock Tests', 'Group Study'
 ];
 
+const TASK_TEMPLATES = {
+  'Assignments': {
+    priority: 'high' as const,
+    description: 'Complete assignment with all requirements and submit on time',
+    estimatedHours: 4
+  },
+  'Exam Preparation': {
+    priority: 'high' as const,
+    description: 'Study material and practice questions for upcoming exam',
+    estimatedHours: 6
+  },
+  'Lab Work': {
+    priority: 'medium' as const,
+    description: 'Complete lab exercises and prepare lab report',
+    estimatedHours: 3
+  },
+  'Project Work': {
+    priority: 'high' as const,
+    description: 'Work on project milestones and deliverables',
+    estimatedHours: 8
+  },
+  'Lecture Notes': {
+    priority: 'low' as const,
+    description: 'Review and organize lecture notes',
+    estimatedHours: 2
+  }
+};
+
 export const SemesterPlanner = () => {
   const { tasks, addTask } = useTask();
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [quickAddCategory, setQuickAddCategory] = useState<string>('');
+  const { showGuide, hideGuide, showGuideAgain } = useSemesterGuide();
 
-  // Filter tasks that are academic-related
+  // Improved academic task filtering logic
   const academicTasks = useMemo(() => {
-    return tasks.filter(task => 
-      ACADEMIC_SUBJECTS.some(subject => 
-        task.category.toLowerCase().includes(subject.toLowerCase()) ||
-        task.title.toLowerCase().includes(subject.toLowerCase())
-      ) || 
-      STUDY_CATEGORIES.some(category => 
-        task.category.toLowerCase().includes(category.toLowerCase()) ||
-        task.title.toLowerCase().includes(category.toLowerCase())
-      )
-    );
+    return tasks.filter(task => {
+      // Check if task category matches academic subjects or study categories
+      const categoryMatch = ACADEMIC_SUBJECTS.includes(task.category) || 
+                           STUDY_CATEGORIES.includes(task.category);
+      
+      // Check if task has academic keywords in title or description
+      const academicKeywords = [...ACADEMIC_SUBJECTS, ...STUDY_CATEGORIES];
+      const contentMatch = academicKeywords.some(keyword => 
+        task.title.toLowerCase().includes(keyword.toLowerCase()) ||
+        (task.description && task.description.toLowerCase().includes(keyword.toLowerCase()))
+      );
+
+      return categoryMatch || contentMatch;
+    });
   }, [tasks]);
+
+  // Get available subjects from actual tasks
+  const availableSubjects = useMemo(() => {
+    const subjects = new Set<string>();
+    academicTasks.forEach(task => {
+      if (ACADEMIC_SUBJECTS.includes(task.category)) {
+        subjects.add(task.category);
+      }
+    });
+    return Array.from(subjects).sort();
+  }, [academicTasks]);
 
   // Get subject statistics
   const subjectStats = useMemo(() => {
@@ -78,6 +127,72 @@ export const SemesterPlanner = () => {
 
   const handleAddAcademicTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     addTask(taskData);
+    setIsAddingTask(false);
+  };
+
+  const createQuickTask = (category: string, subject?: string) => {
+    const template = TASK_TEMPLATES[category as keyof typeof TASK_TEMPLATES];
+    const defaultCategory = subject && ACADEMIC_SUBJECTS.includes(subject) ? subject : category;
+    
+    if (template) {
+      const now = new Date();
+      const dueDate = new Date(now.getTime() + (template.estimatedHours * 24 * 60 * 60 * 1000)); // Add days based on estimated hours
+      
+      addTask({
+        title: `${category}${subject ? ` - ${subject}` : ''}`,
+        description: template.description,
+        category: defaultCategory,
+        priority: template.priority,
+        dueDate,
+        completed: false
+      });
+    } else {
+      setQuickAddCategory(category);
+      setIsAddingTask(true);
+    }
+  };
+
+  const getStudyPlanSuggestions = () => {
+    const now = new Date();
+    const upcomingTasks = academicTasks.filter(task => 
+      !task.completed && task.dueDate && task.dueDate > now
+    ).length;
+
+    const highPriorityTasks = academicTasks.filter(task => 
+      !task.completed && task.priority === 'high'
+    ).length;
+
+    const suggestions = [];
+    
+    if (highPriorityTasks > 3) {
+      suggestions.push({
+        icon: AlertCircle,
+        text: `Focus on ${highPriorityTasks} high-priority tasks first`,
+        color: 'text-red-500'
+      });
+    }
+
+    if (upcomingTasks > 5) {
+      suggestions.push({
+        icon: Clock,
+        text: `Plan ahead for ${upcomingTasks} upcoming deadlines`,
+        color: 'text-orange-500'
+      });
+    } else {
+      suggestions.push({
+        icon: Target,
+        text: 'Great job managing your workload!',
+        color: 'text-green-500'
+      });
+    }
+
+    suggestions.push({
+      icon: BookOpenCheck,
+      text: 'Review completed tasks to reinforce learning',
+      color: 'text-blue-500'
+    });
+
+    return suggestions;
   };
 
   const getSubjectProgress = (subject: string) => {
@@ -105,6 +220,39 @@ export const SemesterPlanner = () => {
             <p className="text-muted-foreground">Manage your academic tasks and deadlines</p>
           </div>
         </div>
+        <div className="flex items-center gap-3">
+          <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+            <SelectTrigger className="w-48">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filter by subject" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Subjects</SelectItem>
+              {availableSubjects.map(subject => (
+                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={showGuideAgain}
+          >
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Help
+          </Button>
+          <TaskForm
+            trigger={
+              <Button className="bg-primary hover:bg-primary/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Academic Task
+              </Button>
+            }
+            onSubmit={handleAddAcademicTask}
+            defaultCategory={selectedSubject !== 'all' ? selectedSubject : ''}
+            academicMode={true}
+          />
+        </div>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
@@ -124,9 +272,9 @@ export const SemesterPlanner = () => {
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{academicTasks.length}</div>
+                <div className="text-2xl font-bold">{filteredTasks.length}</div>
                 <p className="text-xs text-muted-foreground">
-                  {academicTasks.filter(t => t.completed).length} completed
+                  {filteredTasks.filter(t => t.completed).length} completed
                 </p>
               </CardContent>
             </Card>
@@ -139,7 +287,7 @@ export const SemesterPlanner = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{upcomingDeadlines.length}</div>
                 <p className="text-xs text-muted-foreground">
-                  Next in {upcomingDeadlines[0]?.daysLeft || 0} days
+                  {upcomingDeadlines[0] ? `Next in ${upcomingDeadlines[0].daysLeft} days` : 'No deadlines'}
                 </p>
               </CardContent>
             </Card>
@@ -151,13 +299,13 @@ export const SemesterPlanner = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {academicTasks.length > 0 
-                    ? Math.round((academicTasks.filter(t => t.completed).length / academicTasks.length) * 100)
+                  {filteredTasks.length > 0 
+                    ? Math.round((filteredTasks.filter(t => t.completed).length / filteredTasks.length) * 100)
                     : 0}%
                 </div>
                 <Progress 
-                  value={academicTasks.length > 0 
-                    ? (academicTasks.filter(t => t.completed).length / academicTasks.length) * 100
+                  value={filteredTasks.length > 0 
+                    ? (filteredTasks.filter(t => t.completed).length / filteredTasks.length) * 100
                     : 0
                   } 
                   className="mt-2"
@@ -165,6 +313,35 @@ export const SemesterPlanner = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Quick Actions Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Quick Task Creation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {Object.keys(TASK_TEMPLATES).map(category => (
+                  <Button
+                    key={category}
+                    variant="outline"
+                    className="h-auto p-3 text-xs"
+                    onClick={() => createQuickTask(category, selectedSubject !== 'all' ? selectedSubject : undefined)}
+                  >
+                    <div className="text-center">
+                      <div className="font-medium">{category}</div>
+                      <div className="text-muted-foreground mt-1">
+                        {TASK_TEMPLATES[category as keyof typeof TASK_TEMPLATES].priority} priority
+                      </div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Subjects Tab */}
@@ -254,45 +431,85 @@ export const SemesterPlanner = () => {
 
         {/* Study Plan Tab */}
         <TabsContent value="planning" className="space-y-6 animate-enter">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Personalized Study Suggestions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {getStudyPlanSuggestions().map((suggestion, index) => {
+                    const Icon = suggestion.icon;
+                    return (
+                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                        <Icon className={`h-5 w-5 ${suggestion.color}`} />
+                        <p className="text-sm">{suggestion.text}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Task Templates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {STUDY_CATEGORIES.map(category => (
+                    <div key={category} className="flex items-center justify-between p-2 rounded border">
+                      <span className="text-sm font-medium">{category}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => createQuickTask(category)}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <Card>
             <CardHeader>
-              <CardTitle>Study Plan Suggestions</CardTitle>
+              <CardTitle>Study Schedule Optimization</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="font-medium">Quick Suggestions</h4>
-                  <div className="space-y-2 text-sm">
-                    <p className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-green-500" />
-                      Focus on high-priority tasks first
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-orange-500" />
-                      Allocate 2-3 hours daily for exam subjects
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-blue-500" />
-                      Review completed topics weekly
-                    </p>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4 border rounded-lg">
+                  <h4 className="font-medium text-lg">Morning Focus</h4>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    High-priority tasks and complex subjects
+                  </p>
+                  <Badge variant="outline" className="mt-2">9:00 AM - 12:00 PM</Badge>
                 </div>
-                
-                <div className="space-y-4">
-                  <h4 className="font-medium">Study Categories</h4>
-                  <div className="space-y-2">
-                    {STUDY_CATEGORIES.slice(0, 6).map(category => (
-                      <Badge key={category} variant="outline" className="mr-2 mb-2">
-                        {category}
-                      </Badge>
-                    ))}
-                  </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <h4 className="font-medium text-lg">Afternoon Review</h4>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Practice problems and assignments
+                  </p>
+                  <Badge variant="outline" className="mt-2">2:00 PM - 5:00 PM</Badge>
+                </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <h4 className="font-medium text-lg">Evening Prep</h4>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Reading and light study material
+                  </p>
+                  <Badge variant="outline" className="mt-2">7:00 PM - 9:00 PM</Badge>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Semester Guide */}
+      <SemesterGuide isVisible={showGuide} onClose={hideGuide} />
     </div>
   );
 };
