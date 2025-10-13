@@ -38,40 +38,40 @@ export const EnhancedDashboard: React.FC = () => {
         <SmartNotifications />
       </div>
 
-      {/* Enhanced Navigation */}
+      {/* Enhanced Navigation - Responsive Grid */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full">
-          <TabsTrigger value="overview" className="gap-2">
-            <LayoutDashboard className="w-4 h-4" />
-            <span className="hidden sm:inline">Overview</span>
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 w-full gap-1">
+          <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm">
+            <LayoutDashboard className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline truncate">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
-            <BarChart3 className="w-4 h-4" />
-            <span className="hidden sm:inline">Analytics</span>
+          <TabsTrigger value="analytics" className="gap-1.5 text-xs sm:text-sm">
+            <BarChart3 className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline truncate">Analytics</span>
           </TabsTrigger>
-          <TabsTrigger value="ai-tools" className="gap-2">
-            <Brain className="w-4 h-4" />
-            <span className="hidden sm:inline">AI Tools</span>
+          <TabsTrigger value="ai-tools" className="gap-1.5 text-xs sm:text-sm">
+            <Brain className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline truncate">AI Tools</span>
           </TabsTrigger>
-          <TabsTrigger value="focus" className="gap-2">
-            <Zap className="w-4 h-4" />
-            <span className="hidden sm:inline">Focus</span>
+          <TabsTrigger value="focus" className="gap-1.5 text-xs sm:text-sm">
+            <Zap className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline truncate">Focus</span>
           </TabsTrigger>
-          <TabsTrigger value="habits" className="gap-2">
-            <Target className="w-4 h-4" />
-            <span className="hidden sm:inline">Habits</span>
+          <TabsTrigger value="habits" className="gap-1.5 text-xs sm:text-sm">
+            <Target className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline truncate">Habits</span>
           </TabsTrigger>
-          <TabsTrigger value="team" className="gap-2">
-            <Users className="w-4 h-4" />
-            <span className="hidden sm:inline">Team</span>
+          <TabsTrigger value="team" className="gap-1.5 text-xs sm:text-sm">
+            <Users className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline truncate">Team</span>
           </TabsTrigger>
-          <TabsTrigger value="planning" className="gap-2">
-            <Calendar className="w-4 h-4" />
-            <span className="hidden sm:inline">Planning</span>
+          <TabsTrigger value="planning" className="gap-1.5 text-xs sm:text-sm">
+            <Calendar className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline truncate">Planning</span>
           </TabsTrigger>
-          <TabsTrigger value="insights" className="gap-2">
-            <Lightbulb className="w-4 h-4" />
-            <span className="hidden sm:inline">Insights</span>
+          <TabsTrigger value="insights" className="gap-1.5 text-xs sm:text-sm">
+            <Lightbulb className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline truncate">Insights</span>
           </TabsTrigger>
         </TabsList>
 

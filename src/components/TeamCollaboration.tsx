@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Plus, Mail, Crown, User, Calendar, MessageSquare } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Users, Plus, Mail, Crown, User, Calendar, MessageSquare, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { TeamGuide } from './TeamGuide';
 
 interface TeamMember {
   id: string;
@@ -31,6 +33,7 @@ interface Workspace {
 }
 
 export const TeamCollaboration: React.FC = () => {
+  const [showGuide, setShowGuide] = useState(false);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([
     {
       id: '1',
@@ -109,14 +112,32 @@ export const TeamCollaboration: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="w-5 h-5" />
-          Team Collaboration
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <div className="space-y-6">
+      <Tabs defaultValue="workspace" className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <TabsList>
+            <TabsTrigger value="workspace">Workspace</TabsTrigger>
+            <TabsTrigger value="guide">How to Use</TabsTrigger>
+          </TabsList>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowGuide(!showGuide)}
+          >
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Help
+          </Button>
+        </div>
+
+        <TabsContent value="workspace">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Team Collaboration
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
         {/* Workspace Overview */}
         {selectedWorkspace && (
           <div className="space-y-4">
@@ -234,7 +255,14 @@ export const TeamCollaboration: React.FC = () => {
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="guide">
+          <TeamGuide />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };

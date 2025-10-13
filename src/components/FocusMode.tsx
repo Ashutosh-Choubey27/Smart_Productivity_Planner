@@ -73,8 +73,8 @@ export const FocusMode: React.FC = () => {
     setIsBlocking(true);
     setBlockedAttempts(0);
 
-    // Simulate blocking functionality
-    simulateWebsiteBlocking();
+    // Notify about blocking
+    implementWebsiteBlocking();
     
     toast.success(`${preset.name} session started! Stay focused! 🎯`);
   };
@@ -113,18 +113,12 @@ export const FocusMode: React.FC = () => {
     stopSession();
   };
 
-  const simulateWebsiteBlocking = () => {
-    // Simulate blocked site attempts
-    const simulateAttempt = () => {
-      if (isBlocking && Math.random() < 0.1) { // 10% chance every second
-        setBlockedAttempts(prev => prev + 1);
-        toast.warning('🚫 Distraction blocked! Stay focused!');
-      }
-    };
-
-    const attemptInterval = setInterval(simulateAttempt, 1000);
-    
-    return () => clearInterval(attemptInterval);
+  const implementWebsiteBlocking = () => {
+    // Show blocking instructions
+    toast.info('🛡️ Focus Mode Active! Browser instructions sent.', {
+      duration: 5000,
+      description: 'Check the instructions panel for manual blocking steps.'
+    });
   };
 
   const formatTime = (seconds: number) => {
@@ -196,10 +190,10 @@ export const FocusMode: React.FC = () => {
               </div>
             )}
 
-            <div className="p-4 bg-muted/50 rounded-lg">
+            <div className="p-4 bg-muted/50 rounded-lg space-y-3">
               <h4 className="font-medium mb-2 flex items-center gap-2">
                 <Shield className="w-4 h-4" />
-                What will be blocked:
+                Distraction Sites to Block:
               </h4>
               <div className="flex flex-wrap gap-1">
                 {DISTRACTION_SITES.slice(0, 6).map(site => (
@@ -210,6 +204,15 @@ export const FocusMode: React.FC = () => {
                 <Badge variant="outline" className="text-xs">
                   +{DISTRACTION_SITES.length - 6} more
                 </Badge>
+              </div>
+              
+              <div className="pt-2 border-t text-xs text-muted-foreground">
+                <p className="font-medium mb-1">📌 How to block these sites:</p>
+                <ol className="list-decimal list-inside space-y-1 text-xs">
+                  <li>Chrome: Settings → Privacy → Site Settings → Add sites</li>
+                  <li>Firefox: about:preferences → Content Blocking → Custom</li>
+                  <li>Or use browser extensions like "StayFocusd" or "LeechBlock"</li>
+                </ol>
               </div>
             </div>
 
@@ -245,18 +248,30 @@ export const FocusMode: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-3 bg-muted/50 rounded-lg">
                 <div className="font-semibold text-lg flex items-center justify-center gap-1">
-                  <Shield className="w-4 h-4" />
-                  {blockedAttempts}
+                  <Timer className="w-4 h-4" />
+                  {Math.round(timeRemaining / 60)}
                 </div>
-                <div className="text-xs text-muted-foreground">Distractions Blocked</div>
+                <div className="text-xs text-muted-foreground">Minutes Left</div>
               </div>
               <div className="text-center p-3 bg-muted/50 rounded-lg">
                 <div className="font-semibold text-lg flex items-center justify-center gap-1">
                   <Zap className="w-4 h-4" />
-                  {isBlocking ? 'ON' : 'OFF'}
+                  {isBlocking ? 'ACTIVE' : 'OFF'}
                 </div>
-                <div className="text-xs text-muted-foreground">Website Blocking</div>
+                <div className="text-xs text-muted-foreground">Focus Mode</div>
               </div>
+            </div>
+
+            {/* Blocking Instructions */}
+            <div className="p-3 bg-warning/10 border border-warning/20 rounded-lg">
+              <p className="text-xs font-medium mb-2 flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                🛡️ Manual Blocking Active
+              </p>
+              <p className="text-xs text-muted-foreground">
+                For automatic blocking, install browser extensions like <strong>StayFocusd</strong> (Chrome) or <strong>LeechBlock</strong> (Firefox).
+                Web apps cannot block websites directly.
+              </p>
             </div>
 
             {/* Controls */}

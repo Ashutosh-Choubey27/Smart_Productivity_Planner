@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Calendar, BookOpen, Clock, GraduationCap, Target, Plus, Filter, BookOpenCheck, AlertCircle, HelpCircle } from 'lucide-react';
+import { Calendar, BookOpen, Clock, GraduationCap, Target, Plus, Filter, BookOpenCheck, AlertCircle, HelpCircle, Info } from 'lucide-react';
 import { useTask, Task } from '@/contexts/TaskContext';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TaskForm } from '@/components/TaskForm';
 import { SemesterGuide, useSemesterGuide } from '@/components/SemesterGuide';
+import { SemesterGuideDetailed } from '@/components/SemesterGuideDetailed';
 import { cn } from '@/lib/utils';
 
 const ACADEMIC_SUBJECTS = [
@@ -256,11 +257,15 @@ export const SemesterPlanner = () => {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="subjects">Subjects</TabsTrigger>
           <TabsTrigger value="deadlines">Deadlines</TabsTrigger>
           <TabsTrigger value="planning">Study Plan</TabsTrigger>
+          <TabsTrigger value="how-to-use" className="gap-1.5">
+            <Info className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">How to Use</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -505,6 +510,11 @@ export const SemesterPlanner = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* How to Use Tab */}
+        <TabsContent value="how-to-use" className="space-y-6 animate-enter">
+          <SemesterGuideDetailed />
         </TabsContent>
       </Tabs>
 
