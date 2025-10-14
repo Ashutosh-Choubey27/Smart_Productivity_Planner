@@ -47,32 +47,30 @@ async function generateTaskBreakdown(taskTitle: string, taskDescription: string 
     throw new Error('OpenAI API key not configured');
   }
 
-  const prompt = `Break down this task into 3-6 clear, actionable subtasks:
+  const prompt = `You are breaking down a task into specific, actionable subtasks. Be context-aware and create subtasks that make sense for THIS specific task.
 
-TASK: ${taskTitle}
-${taskDescription ? `DESCRIPTION: ${taskDescription}` : ''}
+TASK: "${taskTitle}"
+${taskDescription ? `DESCRIPTION: "${taskDescription}"` : ''}
 
-Requirements:
-1. Create 3-6 specific, actionable subtasks
-2. Each subtask should be a complete sentence with clear action verbs
-3. Order them logically (what should be done first, second, etc.)
-4. Make them small enough to complete in 1-2 hours each
-5. Be specific and concrete, not vague
+CRITICAL REQUIREMENTS:
+1. Analyze the task carefully and create 3-6 CONTEXT-SPECIFIC subtasks
+2. DO NOT use generic phrases like "Research and plan" or "Set up resources" unless they genuinely apply
+3. Each subtask must be directly related to completing THIS specific task
+4. Use concrete action verbs and specific details
+5. Order them in a logical sequence
+6. Make each subtask completable in 1-2 hours
 
-Return ONLY a JSON array of subtask strings:
-["First subtask here", "Second subtask here", "Third subtask here"]
+EXAMPLES TO FOLLOW:
+Task: "Learn 50 new words"
+✓ GOOD: ["Select 50 vocabulary words from a word list", "Create flashcards for all 50 words", "Practice 10 words per day with spaced repetition", "Use each word in 3 sentences", "Take a quiz to test retention"]
+✗ BAD: ["Research and plan approach", "Set up materials", "Complete the task"]
 
-Examples of good subtasks:
-- "Research available Python tutorials online"
-- "Set up development environment with VS Code"
-- "Complete first 3 chapters of tutorial"
-- "Build a simple calculator project"
-- "Review and refactor the code"
+Task: "Upload documents on GitHub"
+✓ GOOD: ["Create a new GitHub repository for the project", "Organize PPT and Synopsis files in proper folders", "Write a descriptive README.md file", "Upload files via GitHub web interface or Git commands", "Verify all documents are accessible and properly formatted"]
+✗ BAD: ["Research GitHub", "Set up resources", "Complete upload"]
 
-Examples of bad subtasks:
-- "Learn Python" (too vague)
-- "Do research" (not specific)
-- "Code stuff" (unclear)`;
+Return ONLY a valid JSON array of strings with NO markdown formatting:
+["First specific subtask", "Second specific subtask", "Third specific subtask"]`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -111,13 +109,110 @@ Examples of bad subtasks:
   } catch (error) {
     console.error('OpenAI API error:', error);
     
-    // Fallback subtasks based on task title
+    // Smarter fallback: Create context-aware subtasks based on task patterns
+    return generateSmartFallbackSubtasks(taskTitle, taskDescription);
+  }
+}
+
+function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: string = ''): string[] {
+  const lowerTitle = taskTitle.toLowerCase();
+  const lowerDesc = taskDescription.toLowerCase();
+  
+  // Pattern matching for common task types
+  
+  // Learning/Study tasks
+  if (lowerTitle.includes('learn') || lowerTitle.includes('study') || lowerTitle.includes('words') || lowerTitle.includes('vocab')) {
+    if (lowerTitle.includes('word') || lowerTitle.includes('vocab')) {
+      return [
+        `Identify and select the specific words to learn`,
+        `Create flashcards or a study document`,
+        `Practice and memorize in small batches`,
+        `Test yourself on the learned material`,
+        `Review and reinforce weak areas`
+      ];
+    }
     return [
-      `Research and plan approach for: ${taskTitle}`,
-      `Set up necessary resources and materials`,
-      `Complete the main components of: ${taskTitle}`,
-      `Review and finalize the work`,
-      `Document and organize results`
+      `Gather study materials and resources`,
+      `Break down the content into manageable sections`,
+      `Study and take notes on each section`,
+      `Practice with exercises or examples`,
+      `Review and test your understanding`
     ];
   }
+  
+  // GitHub/Upload/Document tasks
+  if (lowerTitle.includes('upload') || lowerTitle.includes('github') || lowerTitle.includes('repository') || 
+      lowerDesc.includes('ppt') || lowerDesc.includes('synopsis')) {
+    return [
+      `Create or access the GitHub repository`,
+      `Organize and prepare documents for upload`,
+      `Write descriptive README or documentation`,
+      `Upload files using Git or web interface`,
+      `Verify uploads and add proper descriptions`
+    ];
+  }
+  
+  // Assignment/Homework tasks
+  if (lowerTitle.includes('assignment') || lowerTitle.includes('homework') || lowerTitle.includes('submit')) {
+    return [
+      `Read and understand all requirements`,
+      `Research necessary information or topics`,
+      `Create an outline or plan`,
+      `Complete the main work`,
+      `Review, proofread, and submit`
+    ];
+  }
+  
+  // Exam/Test preparation
+  if (lowerTitle.includes('exam') || lowerTitle.includes('test') || lowerTitle.includes('quiz')) {
+    return [
+      `Review syllabus and identify key topics`,
+      `Gather notes and study materials`,
+      `Create summary sheets or flashcards`,
+      `Practice with past papers or questions`,
+      `Take mock tests and review mistakes`
+    ];
+  }
+  
+  // Project tasks
+  if (lowerTitle.includes('project') || lowerTitle.includes('build') || lowerTitle.includes('create')) {
+    return [
+      `Define project scope and requirements`,
+      `Plan the structure and approach`,
+      `Implement core functionality`,
+      `Test and refine the solution`,
+      `Document and finalize deliverables`
+    ];
+  }
+  
+  // Reading tasks
+  if (lowerTitle.includes('read') || lowerTitle.includes('book') || lowerTitle.includes('chapter')) {
+    return [
+      `Prepare reading materials and notes`,
+      `Read and highlight key points`,
+      `Summarize main concepts`,
+      `Note down questions or insights`,
+      `Review and reflect on the content`
+    ];
+  }
+  
+  // Writing tasks
+  if (lowerTitle.includes('write') || lowerTitle.includes('essay') || lowerTitle.includes('report')) {
+    return [
+      `Research and gather information`,
+      `Create an outline or structure`,
+      `Write the first draft`,
+      `Edit and improve content`,
+      `Proofread and finalize`
+    ];
+  }
+  
+  // Generic but improved fallback
+  return [
+    `Plan and outline the approach`,
+    `Gather necessary materials or information`,
+    `Work on the main task components`,
+    `Review and refine your work`,
+    `Complete and verify everything is done`
+  ];
 }
