@@ -17,6 +17,7 @@ import { VoiceTaskInput } from '@/components/VoiceTaskInput';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { validateTaskTitle } from '@/utils/validation';
+import { supabase } from '@/integrations/supabase/client';
 
 
 const taskSchema = z.object({
@@ -106,7 +107,7 @@ export const TaskForm = ({
     }
   }, [editingTask, form]);
 
-  const handleSubmit = (data: TaskFormData) => {
+  const handleSubmit = async (data: TaskFormData) => {
     // Ensure custom category is named
     if (data.category === 'custom' && !customCategory.trim()) {
       toast({
@@ -117,7 +118,7 @@ export const TaskForm = ({
       return;
     }
 
-    const taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'progress'> & { progress?: number } = {
+    const taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'progress'> & { progress?: number, subtasks?: any[] } = {
       title: data.title,
       description: data.description || '',
       priority: data.priority,
@@ -125,6 +126,45 @@ export const TaskForm = ({
       dueDate: data.dueDate,
       completed: editingTask?.completed || false
     };
+
+    // Generate subtasks automatically using AI for new tasks only
+    if (!editingTask) {
+      try {
+        toast({
+          title: "Creating task...",
+          description: "Generating subtasks to help you track progress.",
+        });
+
+        const { data: breakdownData, error } = await supabase.functions.invoke('ai-task-breakdown', {
+          body: {
+            user_id: 'local-user',
+            task_title: taskData.title,
+            task_description: taskData.description || ''
+          }
+        });
+
+        if (!error && breakdownData?.subtasks && Array.isArray(breakdownData.subtasks)) {
+          const subtasks = breakdownData.subtasks.map((text: string) => ({
+            id: crypto.randomUUID(),
+            text,
+            completed: false
+          }));
+          
+          taskData.subtasks = subtasks;
+          taskData.progress = 0;
+
+          toast({
+            title: "Task created!",
+            description: `Generated ${subtasks.length} subtasks to track your progress.`,
+          });
+        } else {
+          taskData.progress = 0;
+        }
+      } catch (error) {
+        console.error('Failed to generate subtasks:', error);
+        taskData.progress = 0;
+      }
+    }
     
     onSubmit(taskData);
     

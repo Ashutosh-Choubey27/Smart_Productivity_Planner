@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Clock, Calendar, Trash2, Edit, CheckCircle2, Circle } from 'lucide-react';
+import { Clock, Calendar, Trash2, Edit, CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Task, useTask } from '@/contexts/TaskContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 interface TaskCardProps {
@@ -18,7 +18,8 @@ interface TaskCardProps {
 
 export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const { updateTask } = useTask();
+  const [showSubtasks, setShowSubtasks] = useState(true);
+  const { toggleSubtask } = useTask();
 
   const getPriorityColor = (priority: Task['priority']) => {
     switch (priority) {
@@ -61,11 +62,13 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    // Add small delay for animation
     setTimeout(() => {
       onDelete(task.id);
     }, 150);
   };
+
+  const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+  const completedSubtasks = hasSubtasks ? task.subtasks.filter(s => s.completed).length : 0;
 
   return (
     <Card 
@@ -144,29 +147,62 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
             <span className="font-semibold">{Math.round(task.progress ?? 0)}%</span>
           </div>
           <Progress value={task.progress ?? 0} className="mb-2" />
-          <div className="flex items-center gap-2">
-            <Slider
-              value={[task.progress ?? 0]}
-              min={0}
-              max={100}
-              step={5}
-              onValueChange={(v) => {
-                const value = Array.isArray(v) ? v[0] : 0;
-                updateTask(task.id, { progress: value });
-              }}
-              className="flex-1"
-              aria-label="Task progress"
-            />
-            <span className={cn(
-              "text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap",
-              task.completed 
-                ? "bg-success/10 text-success border border-success/20" 
-                : task.progress && task.progress > 0 
-                  ? "bg-primary/10 text-primary border border-primary/20"
-                  : "bg-muted text-muted-foreground border border-border"
-            )}>
-              {task.completed ? "Complete" : task.progress && task.progress > 0 ? "In Progress" : "Not Started"}
-            </span>
+          
+          {hasSubtasks && (
+            <div className="mt-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSubtasks(!showSubtasks)}
+                className="w-full justify-between h-8 px-2 hover:bg-muted/50"
+              >
+                <span className="text-xs font-medium">
+                  Subtasks ({completedSubtasks}/{task.subtasks.length})
+                </span>
+                {showSubtasks ? (
+                  <ChevronUp className="h-3 w-3" />
+                ) : (
+                  <ChevronDown className="h-3 w-3" />
+                )}
+              </Button>
+              
+              {showSubtasks && (
+                <div className="mt-2 space-y-2 pl-2">
+                  {task.subtasks.map((subtask) => (
+                    <div
+                      key={subtask.id}
+                      className="flex items-start gap-2 group"
+                    >
+                      <Checkbox
+                        checked={subtask.completed}
+                        onCheckedChange={() => toggleSubtask(task.id, subtask.id)}
+                        className="mt-0.5"
+                      />
+                      <label
+                        className={cn(
+                          "text-xs cursor-pointer flex-1 leading-relaxed",
+                          subtask.completed && "line-through text-muted-foreground"
+                        )}
+                        onClick={() => toggleSubtask(task.id, subtask.id)}
+                      >
+                        {subtask.text}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className={cn(
+            "text-xs font-medium px-2 py-1 rounded-full text-center mt-2",
+            task.completed 
+              ? "bg-success/10 text-success border border-success/20" 
+              : task.progress && task.progress > 0 
+                ? "bg-primary/10 text-primary border border-primary/20"
+                : "bg-muted text-muted-foreground border border-border"
+          )}>
+            {task.completed ? "✓ Complete" : task.progress && task.progress > 0 ? "In Progress" : "Not Started"}
           </div>
         </div>
       </CardContent>

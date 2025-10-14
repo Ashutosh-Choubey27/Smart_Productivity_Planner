@@ -4,6 +4,12 @@ import { useToast } from '@/hooks/use-toast';
 import { getLocalUserId } from '@/utils/userStorage';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface Subtask {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -13,6 +19,7 @@ export interface Task {
   dueDate?: Date;
   completed: boolean;
   progress: number; // 0-100 percentage of completion
+  subtasks?: Subtask[]; // Auto-generated subtasks
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +30,7 @@ interface TaskContextType {
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   toggleTask: (id: string) => void;
+  toggleSubtask: (taskId: string, subtaskId: string) => void;
   getTasksByPriority: (priority: Task['priority']) => Task[];
   getTasksByCategory: (category: string) => Task[];
   getCompletedTasks: () => Task[];
@@ -58,7 +66,8 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
           createdAt: new Date(task.createdAt),
           updatedAt: new Date(task.updatedAt),
           dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-          progress: typeof task.progress === 'number' ? task.progress : 0
+          progress: typeof task.progress === 'number' ? task.progress : 0,
+          subtasks: Array.isArray(task.subtasks) ? task.subtasks : undefined
         }));
         setTasks(parsedTasks);
       } catch (error) {
@@ -159,6 +168,31 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
     ));
   };
 
+  const toggleSubtask = (taskId: string, subtaskId: string) => {
+    setTasks(prev => prev.map(task => {
+      if (task.id === taskId && task.subtasks) {
+        const updatedSubtasks = task.subtasks.map(subtask =>
+          subtask.id === subtaskId
+            ? { ...subtask, completed: !subtask.completed }
+            : subtask
+        );
+        
+        // Calculate new progress based on completed subtasks
+        const completedCount = updatedSubtasks.filter(s => s.completed).length;
+        const newProgress = Math.round((completedCount / updatedSubtasks.length) * 100);
+        
+        return {
+          ...task,
+          subtasks: updatedSubtasks,
+          progress: newProgress,
+          completed: newProgress === 100,
+          updatedAt: new Date()
+        };
+      }
+      return task;
+    }));
+  };
+
   const getTasksByPriority = (priority: Task['priority']) => {
     return tasks.filter(task => task.priority === priority);
   };
@@ -181,6 +215,7 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
     updateTask,
     deleteTask,
     toggleTask,
+    toggleSubtask,
     getTasksByPriority,
     getTasksByCategory,
     getCompletedTasks,
