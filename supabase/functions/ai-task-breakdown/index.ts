@@ -47,27 +47,39 @@ async function generateTaskBreakdown(taskTitle: string, taskDescription: string 
     throw new Error('OpenAI API key not configured');
   }
 
-  const prompt = `You are breaking down a task into specific, actionable subtasks. Be context-aware and create subtasks that make sense for THIS specific task.
+  const prompt = `You are an AI-powered smart productivity planning assistant for students.
+Your goal is to analyze a given main task and generate practical, context-specific subtasks that help complete it efficiently.
 
-TASK: "${taskTitle}"
-${taskDescription ? `DESCRIPTION: "${taskDescription}"` : ''}
+TASK TO ANALYZE:
+Title: "${taskTitle}"
+${taskDescription ? `Description: "${taskDescription}"` : ''}
 
-CRITICAL REQUIREMENTS:
-1. Analyze the task carefully and create 3-6 CONTEXT-SPECIFIC subtasks
-2. DO NOT use generic phrases like "Research and plan" or "Set up resources" unless they genuinely apply
-3. Each subtask must be directly related to completing THIS specific task
-4. Use concrete action verbs and specific details
-5. Order them in a logical sequence
-6. Make each subtask completable in 1-2 hours
+CRITICAL INSTRUCTIONS:
+1. Understand what the main task is trying to achieve
+2. Break it into 3–7 meaningful subtasks (depending on complexity)
+3. AVOID vague or generic steps like "Plan your work", "Do the task", "Set up resources", "Review and finalize"
+4. Each subtask MUST be action-oriented, starting with a VERB (Research, Review, Write, Debug, Test, Revise, Summarize, Create, Implement, Analyze, Practice, Study, Build, etc.)
+5. For STUDYING tasks: include smart learning steps (revision, testing, note summarization, practice problems, flashcards)
+6. For TECHNICAL tasks (coding, projects): include setup, development, testing, and documentation subtasks
+7. Keep each subtask short (max 12–15 words)
+8. Subtasks should be ordered logically to complete the main task
 
-EXAMPLES TO FOLLOW:
-Task: "Learn 50 new words"
-✓ GOOD: ["Select 50 vocabulary words from a word list", "Create flashcards for all 50 words", "Practice 10 words per day with spaced repetition", "Use each word in 3 sentences", "Take a quiz to test retention"]
-✗ BAD: ["Research and plan approach", "Set up materials", "Complete the task"]
+EXAMPLES OF EXCELLENT SUBTASKS:
 
-Task: "Upload documents on GitHub"
-✓ GOOD: ["Create a new GitHub repository for the project", "Organize PPT and Synopsis files in proper folders", "Write a descriptive README.md file", "Upload files via GitHub web interface or Git commands", "Verify all documents are accessible and properly formatted"]
-✗ BAD: ["Research GitHub", "Set up resources", "Complete upload"]
+Task: "Learn React Hooks"
+✅ PERFECT:
+["Read official React Hooks documentation and key concepts", "Watch tutorial video on useState and useEffect", "Build simple counter app using useState", "Create todo list with useEffect for persistence", "Practice useContext for state management", "Review and refactor code for best practices"]
+
+Task: "Prepare for Physics Exam on Thermodynamics"
+✅ PERFECT:
+["Review lecture notes on laws of thermodynamics", "Solve 10 numerical problems from textbook chapter 8", "Create summary sheet of key formulas and concepts", "Watch explanation videos on entropy and enthalpy", "Take practice test and identify weak areas", "Revise difficult topics and clarify doubts"]
+
+Task: "Build GitHub Profile README"
+✅ PERFECT:
+["Research best GitHub profile README examples", "Write introduction and skills section", "Add project showcase with descriptions and links", "Create visual elements using shields and stats", "Test README rendering on GitHub", "Proofread and publish final version"]
+
+❌ NEVER DO THIS:
+["Research and plan approach", "Set up necessary resources", "Complete the main components", "Review and finalize", "Document results"]
 
 Return ONLY a valid JSON array of strings with NO markdown formatting:
 ["First specific subtask", "Second specific subtask", "Third specific subtask"]`;
