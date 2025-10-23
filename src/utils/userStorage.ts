@@ -2,9 +2,9 @@
 
 const USER_ID_KEY = 'lovable_user_id';
 
-// Generate a unique user ID for local storage
+// Generate a unique user ID for local storage (valid UUID format)
 export const generateUserId = (): string => {
-  return 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+  return crypto.randomUUID();
 };
 
 // Get or create a local user ID
