@@ -19,8 +19,12 @@ serve(async (req) => {
     }
 
     console.log('Breaking down task for user:', user_id, '- Task:', task_title);
+    console.log('Task description:', task_description);
 
     const subtasks = await generateTaskBreakdown(task_title, task_description);
+    
+    console.log('Generated subtasks count:', subtasks.length);
+    console.log('Subtasks:', JSON.stringify(subtasks));
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -44,8 +48,11 @@ serve(async (req) => {
 async function generateTaskBreakdown(taskTitle: string, taskDescription: string = '') {
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
   if (!openAIApiKey) {
+    console.error('OpenAI API key not found in environment');
     throw new Error('OpenAI API key not configured');
   }
+  
+  console.log('Using OpenAI API to generate breakdown...');
 
   const prompt = `You are an AI-powered smart productivity planning assistant for students.
 Your goal is to analyze a given main task and generate practical, context-specific subtasks that help complete it efficiently.
@@ -106,20 +113,36 @@ Return ONLY a valid JSON array of strings with NO markdown formatting:
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`OpenAI API error: ${response.status}`, errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('OpenAI response received');
+    
     const aiResponse = data.choices[0].message.content;
+    console.log('AI response content:', aiResponse);
     
     // Parse the JSON response
     const subtasks = JSON.parse(aiResponse);
+    console.log('Parsed subtasks:', subtasks);
     
     // Validate and ensure proper format
-    return Array.isArray(subtasks) ? subtasks.filter(s => typeof s === 'string' && s.length > 0) : [];
+    if (!Array.isArray(subtasks)) {
+      console.error('Response is not an array, using fallback');
+      return generateSmartFallbackSubtasks(taskTitle, taskDescription);
+    }
+    
+    const validSubtasks = subtasks.filter(s => typeof s === 'string' && s.length > 0);
+    console.log('Valid subtasks count:', validSubtasks.length);
+    
+    return validSubtasks;
 
   } catch (error) {
     console.error('OpenAI API error:', error);
+    console.error('Error details:', error.message);
+    console.log('Falling back to smart fallback function');
     
     // Smarter fallback: Create context-aware subtasks based on task patterns
     return generateSmartFallbackSubtasks(taskTitle, taskDescription);

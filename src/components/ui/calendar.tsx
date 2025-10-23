@@ -35,7 +35,7 @@ function Calendar({
           "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
         row: "flex w-full mt-2",
         cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-        day: "h-9 w-9 p-0 font-normal rounded-md hover:bg-accent hover:text-accent-foreground transition-colors",
+        day: "h-9 w-9 p-0 font-normal rounded-md hover:bg-accent hover:text-accent-foreground transition-colors aria-selected:hover:!bg-success/30 aria-selected:hover:!text-success-foreground aria-selected:!bg-success/20 aria-selected:!text-success-foreground",
         day_range_end: "day-range-end",
         day_selected:
           "bg-success/20 text-success-foreground border-2 border-success hover:bg-success/30 hover:text-success-foreground focus:bg-success/30 focus:text-success-foreground [&:not([disabled])]:hover:bg-success/30",
