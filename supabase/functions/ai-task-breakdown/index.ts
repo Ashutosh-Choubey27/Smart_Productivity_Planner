@@ -129,102 +129,212 @@ Return ONLY a valid JSON array of strings with NO markdown formatting:
 function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: string = ''): string[] {
   const lowerTitle = taskTitle.toLowerCase();
   const lowerDesc = taskDescription.toLowerCase();
+  const combined = `${lowerTitle} ${lowerDesc}`.trim();
   
-  // Pattern matching for common task types
+  // Extract specific subjects or topics from the task
+  const extractSubject = () => {
+    const subjects = ['physics', 'chemistry', 'biology', 'math', 'history', 'english', 'computer', 'science'];
+    for (const subj of subjects) {
+      if (combined.includes(subj)) return subj.charAt(0).toUpperCase() + subj.slice(1);
+    }
+    return 'the topic';
+  };
   
-  // Learning/Study tasks
-  if (lowerTitle.includes('learn') || lowerTitle.includes('study') || lowerTitle.includes('words') || lowerTitle.includes('vocab')) {
+  // Learning/Study tasks - highly specific
+  if (lowerTitle.includes('learn') || lowerTitle.includes('study')) {
+    const subject = extractSubject();
+    
     if (lowerTitle.includes('word') || lowerTitle.includes('vocab')) {
+      const count = lowerTitle.match(/\d+/)?.[0] || '20';
       return [
-        `Identify and select the specific words to learn`,
-        `Create flashcards or a study document`,
-        `Practice and memorize in small batches`,
-        `Test yourself on the learned material`,
-        `Review and reinforce weak areas`
+        `List out all ${count} words with definitions`,
+        `Create flashcards or digital notes for each word`,
+        `Practice pronunciation and usage in sentences`,
+        `Quiz yourself on meanings and spelling`,
+        `Review difficult words multiple times`
       ];
     }
+    
+    if (lowerTitle.includes('chapter') || lowerTitle.includes('unit')) {
+      return [
+        `Read ${subject} chapter and highlight key concepts`,
+        `Make detailed notes on important formulas and theories`,
+        `Solve example problems from the chapter`,
+        `Create summary chart of main topics`,
+        `Test understanding with practice questions`
+      ];
+    }
+    
     return [
-      `Gather study materials and resources`,
-      `Break down the content into manageable sections`,
-      `Study and take notes on each section`,
-      `Practice with exercises or examples`,
-      `Review and test your understanding`
+      `Watch video tutorials or read materials on ${subject}`,
+      `Take comprehensive notes on core concepts`,
+      `Practice problems or exercises to apply knowledge`,
+      `Create quick reference sheet of key points`,
+      `Self-test to verify understanding`
     ];
   }
   
-  // GitHub/Upload/Document tasks
-  if (lowerTitle.includes('upload') || lowerTitle.includes('github') || lowerTitle.includes('repository') || 
-      lowerDesc.includes('ppt') || lowerDesc.includes('synopsis')) {
+  // GitHub/Upload/Repository tasks - very specific
+  if (lowerTitle.includes('upload') || lowerTitle.includes('github') || lowerTitle.includes('repository') || lowerTitle.includes('push')) {
+    const hasDoc = lowerDesc.includes('ppt') || lowerDesc.includes('pdf') || lowerDesc.includes('doc') || lowerDesc.includes('synopsis');
+    
+    if (hasDoc) {
+      return [
+        `Create new GitHub repository with descriptive name`,
+        `Prepare and organize all documents to upload`,
+        `Write detailed README explaining project contents`,
+        `Upload files via web interface or Git commands`,
+        `Add commit messages and verify all files visible`
+      ];
+    }
+    
     return [
-      `Create or access the GitHub repository`,
-      `Organize and prepare documents for upload`,
-      `Write descriptive README or documentation`,
-      `Upload files using Git or web interface`,
-      `Verify uploads and add proper descriptions`
+      `Initialize Git repository in project folder`,
+      `Add all project files using git add command`,
+      `Commit changes with clear descriptive message`,
+      `Create remote repository on GitHub`,
+      `Push code to GitHub and verify upload`
     ];
   }
   
-  // Assignment/Homework tasks
-  if (lowerTitle.includes('assignment') || lowerTitle.includes('homework') || lowerTitle.includes('submit')) {
+  // Assignment/Homework tasks - action specific
+  if (lowerTitle.includes('assignment') || lowerTitle.includes('homework')) {
+    const subject = extractSubject();
+    
     return [
-      `Read and understand all requirements`,
-      `Research necessary information or topics`,
-      `Create an outline or plan`,
-      `Complete the main work`,
-      `Review, proofread, and submit`
+      `Read ${subject} assignment requirements carefully`,
+      `Research necessary information and gather resources`,
+      `Draft outline organizing main points to cover`,
+      `Complete all questions or tasks thoroughly`,
+      `Proofread answers and check formatting before submission`
     ];
   }
   
-  // Exam/Test preparation
+  // Exam/Test preparation - study focused
   if (lowerTitle.includes('exam') || lowerTitle.includes('test') || lowerTitle.includes('quiz')) {
+    const subject = extractSubject();
+    
     return [
-      `Review syllabus and identify key topics`,
-      `Gather notes and study materials`,
-      `Create summary sheets or flashcards`,
-      `Practice with past papers or questions`,
-      `Take mock tests and review mistakes`
+      `Review all ${subject} lecture notes and textbook chapters`,
+      `List important formulas, definitions, and concepts`,
+      `Solve previous year papers or sample questions`,
+      `Create condensed summary sheet for quick revision`,
+      `Take practice test and identify weak areas`,
+      `Revise difficult topics thoroughly before exam`
     ];
   }
   
-  // Project tasks
-  if (lowerTitle.includes('project') || lowerTitle.includes('build') || lowerTitle.includes('create')) {
+  // Coding/Project tasks - technical steps
+  if (lowerTitle.includes('project') || lowerTitle.includes('code') || lowerTitle.includes('develop') || lowerTitle.includes('build') || lowerTitle.includes('app')) {
+    const tech = combined.includes('react') ? 'React' : combined.includes('python') ? 'Python' : 'the project';
+    
     return [
-      `Define project scope and requirements`,
-      `Plan the structure and approach`,
-      `Implement core functionality`,
-      `Test and refine the solution`,
-      `Document and finalize deliverables`
+      `Set up ${tech} development environment and dependencies`,
+      `Design project structure and component architecture`,
+      `Implement core features and functionality`,
+      `Write unit tests for critical functions`,
+      `Debug issues and optimize code performance`,
+      `Create documentation and deployment guide`
     ];
   }
   
-  // Reading tasks
-  if (lowerTitle.includes('read') || lowerTitle.includes('book') || lowerTitle.includes('chapter')) {
+  // Reading tasks - comprehension focused
+  if (lowerTitle.includes('read') || lowerTitle.includes('book') || lowerTitle.includes('article')) {
+    const material = lowerTitle.includes('chapter') ? 'chapter' : lowerTitle.includes('book') ? 'book' : 'material';
+    
     return [
-      `Prepare reading materials and notes`,
-      `Read and highlight key points`,
-      `Summarize main concepts`,
-      `Note down questions or insights`,
-      `Review and reflect on the content`
+      `Skim through ${material} to understand structure`,
+      `Read carefully and highlight important points`,
+      `Summarize each section in your own words`,
+      `Note down questions or unclear concepts`,
+      `Review summary and connect with existing knowledge`
     ];
   }
   
-  // Writing tasks
-  if (lowerTitle.includes('write') || lowerTitle.includes('essay') || lowerTitle.includes('report')) {
+  // Writing tasks - composition focused
+  if (lowerTitle.includes('write') || lowerTitle.includes('essay') || lowerTitle.includes('report') || lowerTitle.includes('paper')) {
+    const type = lowerTitle.includes('essay') ? 'essay' : lowerTitle.includes('report') ? 'report' : 'paper';
+    
     return [
-      `Research and gather information`,
-      `Create an outline or structure`,
-      `Write the first draft`,
-      `Edit and improve content`,
-      `Proofread and finalize`
+      `Research topic and gather credible sources`,
+      `Create detailed outline with main arguments`,
+      `Write introduction with clear thesis statement`,
+      `Develop body paragraphs with supporting evidence`,
+      `Write conclusion summarizing key points`,
+      `Edit for grammar, clarity, and formatting`
     ];
   }
   
-  // Generic but improved fallback
+  // Presentation tasks
+  if (lowerTitle.includes('presentation') || lowerTitle.includes('ppt') || lowerTitle.includes('slides')) {
+    return [
+      `Research topic and collect relevant information`,
+      `Create presentation outline with key slides`,
+      `Design slides with visuals and minimal text`,
+      `Prepare speaking notes for each slide`,
+      `Practice delivery and timing of presentation`,
+      `Refine slides based on practice feedback`
+    ];
+  }
+  
+  // Practice/Exercise tasks
+  if (lowerTitle.includes('practice') || lowerTitle.includes('exercise') || lowerTitle.includes('solve')) {
+    const subject = extractSubject();
+    
+    return [
+      `Gather ${subject} problems to practice`,
+      `Attempt solving first set without help`,
+      `Review solutions and understand mistakes`,
+      `Practice similar problems until confident`,
+      `Time yourself on final practice set`
+    ];
+  }
+  
+  // Research tasks
+  if (lowerTitle.includes('research') || lowerTitle.includes('investigate')) {
+    return [
+      `Define research scope and key questions`,
+      `Search credible sources and academic databases`,
+      `Read and take notes from relevant sources`,
+      `Organize findings into logical categories`,
+      `Synthesize information and draw conclusions`,
+      `Compile references and citations properly`
+    ];
+  }
+  
+  // Meeting/Discussion tasks
+  if (lowerTitle.includes('meeting') || lowerTitle.includes('discuss') || lowerTitle.includes('call')) {
+    return [
+      `Prepare agenda items to discuss`,
+      `Gather relevant documents or materials`,
+      `Note down questions or points to raise`,
+      `Attend meeting and take detailed notes`,
+      `Follow up on action items assigned`
+    ];
+  }
+  
+  // Generic but MUCH more specific fallback based on verbs
+  const hasAction = lowerTitle.match(/\b(complete|finish|do|make|prepare|submit)\b/);
+  
+  if (hasAction) {
+    return [
+      `List all requirements and deliverables needed`,
+      `Break down main work into smaller chunks`,
+      `Complete each chunk systematically`,
+      `Cross-check everything against requirements`,
+      `Finalize and submit or mark as complete`
+    ];
+  }
+  
+  // Ultimate fallback - extract any meaningful words from title
+  const meaningfulWords = taskTitle.split(' ').filter(w => w.length > 3);
+  const taskFocus = meaningfulWords.slice(0, 2).join(' ') || 'this task';
+  
   return [
-    `Plan and outline the approach`,
-    `Gather necessary materials or information`,
-    `Work on the main task components`,
-    `Review and refine your work`,
-    `Complete and verify everything is done`
+    `Understand exactly what ${taskFocus} requires`,
+    `Collect all necessary materials and information`,
+    `Work through ${taskFocus} step by step`,
+    `Double-check your work for completeness`,
+    `Mark ${taskFocus} as finished and verified`
   ];
 }
