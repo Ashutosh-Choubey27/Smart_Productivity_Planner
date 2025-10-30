@@ -105,8 +105,9 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
     
     setTasks(prev => [newTask, ...prev]);
     
-    // Save to Supabase for AI analysis
+    // Save to Supabase for AI analysis (with proper error handling)
     supabase.from('tasks').insert({
+      id: newTask.id,
       user_id: localUserId,
       title: newTask.title,
       description: newTask.description,
@@ -115,7 +116,10 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
       due_date: newTask.dueDate?.toISOString(),
       completed: newTask.completed
     }).then(({ error }) => {
-      if (error) console.error('Error saving task to Supabase:', error);
+      if (error) {
+        console.error('Error saving task to Supabase:', error);
+        // Don't show error to user since localStorage still works
+      }
     });
   };
 
@@ -139,7 +143,7 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
         : task
     ));
     
-    // Update in Supabase for AI analysis
+    // Update in Supabase using proper task ID
     const taskToUpdate = tasks.find(t => t.id === id);
     if (taskToUpdate) {
       supabase.from('tasks').update({
@@ -150,7 +154,7 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
         due_date: updates.dueDate?.toISOString() || taskToUpdate.dueDate?.toISOString(),
         completed: updates.completed !== undefined ? updates.completed : taskToUpdate.completed,
         completed_at: updates.completed ? new Date().toISOString() : null
-      }).eq('user_id', localUserId).eq('title', taskToUpdate.title).then(({ error }) => {
+      }).eq('id', id).then(({ error }) => {
         if (error) console.error('Error updating task in Supabase:', error);
       });
     }
@@ -158,6 +162,11 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
 
   const deleteTask = (id: string) => {
     setTasks(prev => prev.filter(task => task.id !== id));
+    
+    // Delete from Supabase as well
+    supabase.from('tasks').delete().eq('id', id).then(({ error }) => {
+      if (error) console.error('Error deleting task from Supabase:', error);
+    });
   };
 
   const toggleTask = (id: string) => {
