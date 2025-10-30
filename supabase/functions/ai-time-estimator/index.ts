@@ -42,9 +42,9 @@ serve(async (req) => {
 });
 
 async function generateTimeEstimation(taskTitle: string, taskDescription: string = '', taskCategory: string = '') {
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openAIApiKey) {
-    throw new Error('OpenAI API key not configured');
+  const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!geminiApiKey) {
+    throw new Error('Gemini API key not configured');
   }
 
   const prompt = `Estimate the time required to complete this task:
@@ -80,35 +80,46 @@ Guidelines:
 Be realistic and slightly conservative with estimates to account for unexpected challenges.`;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are a productivity expert that provides accurate time estimates for tasks. Always respond with valid JSON only.' 
-          },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 400,
-        temperature: 0.3,
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': geminiApiKey,
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 400,
+          }
+        }),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
-    // Parse the JSON response
-    const estimation = JSON.parse(aiResponse);
+    if (!generatedText) {
+      throw new Error('No response from Gemini');
+    }
+
+    // Parse JSON from response
+    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in response');
+    }
+
+    const estimation = JSON.parse(jsonMatch[0]);
     
     // Validate and ensure proper format
     return {
@@ -119,7 +130,7 @@ Be realistic and slightly conservative with estimates to account for unexpected 
     };
 
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('Gemini API error:', error);
     
     // Fallback estimation based on task characteristics
     const words = taskTitle.split(' ').length;

@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.ai-time-estimator]
 verify_jwt = false
+
+[functions.ai-smart-scheduler]
+verify_jwt = false

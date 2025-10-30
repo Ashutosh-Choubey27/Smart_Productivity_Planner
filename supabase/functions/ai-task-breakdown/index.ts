@@ -46,13 +46,13 @@ serve(async (req) => {
 });
 
 async function generateTaskBreakdown(taskTitle: string, taskDescription: string = '') {
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openAIApiKey) {
-    console.error('OpenAI API key not found in environment');
-    throw new Error('OpenAI API key not configured');
+  const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!geminiApiKey) {
+    console.error('Gemini API key not found in environment');
+    throw new Error('Gemini API key not configured');
   }
   
-  console.log('Using OpenAI API to generate breakdown...');
+  console.log('Using Gemini API to generate breakdown...');
 
   const prompt = `You are an AI-powered smart productivity planning assistant for students.
 Your goal is to analyze a given main task and generate practical, context-specific subtasks that help complete it efficiently.
@@ -92,40 +92,52 @@ Return ONLY a valid JSON array of strings with NO markdown formatting:
 ["First specific subtask", "Second specific subtask", "Third specific subtask"]`;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are a productivity expert that breaks down complex tasks into manageable subtasks. Always respond with valid JSON only.' 
-          },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 500,
-        temperature: 0.5,
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': geminiApiKey,
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.5,
+            maxOutputTokens: 500,
+          }
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`OpenAI API error: ${response.status}`, errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      console.error(`Gemini API error: ${response.status}`, errorText);
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('OpenAI response received');
+    console.log('Gemini response received');
     
-    const aiResponse = data.choices[0].message.content;
-    console.log('AI response content:', aiResponse);
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    console.log('AI response content:', generatedText);
     
-    // Parse the JSON response
-    const subtasks = JSON.parse(aiResponse);
+    if (!generatedText) {
+      throw new Error('No response from Gemini');
+    }
+
+    // Parse JSON from response
+    const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      console.error('No JSON array found in response');
+      return generateSmartFallbackSubtasks(taskTitle, taskDescription);
+    }
+
+    const subtasks = JSON.parse(jsonMatch[0]);
     console.log('Parsed subtasks:', subtasks);
     
     // Validate and ensure proper format
@@ -140,7 +152,7 @@ Return ONLY a valid JSON array of strings with NO markdown formatting:
     return validSubtasks;
 
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('Gemini API error:', error);
     console.error('Error details:', error.message);
     console.log('Falling back to smart fallback function');
     

@@ -42,9 +42,9 @@ serve(async (req) => {
 });
 
 async function generateSmartSchedule(tasks: any[]) {
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openAIApiKey) {
-    throw new Error('OpenAI API key not configured');
+  const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!geminiApiKey) {
+    throw new Error('Gemini API key not configured');
   }
 
   const taskList = tasks.map((task, index) => 
@@ -65,7 +65,7 @@ Create a smart schedule considering:
 
 Assume an 8-hour work day from 9:00 AM to 5:00 PM.
 
-Return ONLY a JSON array with this format:
+Return ONLY a JSON array with this exact format:
 [
   {
     "task": "Task title here",
@@ -86,43 +86,54 @@ Guidelines:
 - Provide clear reasoning for timing decisions`;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are a productivity expert that creates optimized daily schedules. Always respond with valid JSON only.' 
-          },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 800,
-        temperature: 0.4,
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': geminiApiKey,
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 800,
+          }
+        }),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
-    // Parse the JSON response
-    const schedule = JSON.parse(aiResponse);
-    
-    // Validate and ensure proper format
-    return Array.isArray(schedule) ? schedule.filter(item => 
-      item.task && item.startTime && typeof item.duration === 'number'
-    ) : [];
+    if (!generatedText) {
+      throw new Error('No response from Gemini');
+    }
+
+    // Parse JSON from response
+    const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const schedule = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(schedule)) {
+        return schedule.filter(item => 
+          item.task && item.startTime && typeof item.duration === 'number'
+        );
+      }
+    }
+
+    throw new Error('Invalid response format');
 
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('Gemini API error:', error);
     
     // Fallback schedule based on priority and order
     return tasks.slice(0, 6).map((task, index) => {

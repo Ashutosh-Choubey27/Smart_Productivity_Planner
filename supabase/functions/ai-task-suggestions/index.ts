@@ -156,9 +156,9 @@ function analyzeTaskPatterns(tasks: any[]): TaskAnalysis {
 }
 
 async function generateAISuggestions(analysis: TaskAnalysis, recentTasks: any[]) {
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openAIApiKey) {
-    throw new Error('OpenAI API key not configured');
+  const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!geminiApiKey) {
+    throw new Error('Gemini API key not configured');
   }
 
   const recentTaskTitles = recentTasks.slice(0, 10).map(t => t.title);
@@ -199,35 +199,46 @@ Return ONLY a JSON array of suggestions in this format:
 Types can be: productivity_optimization, skill_development, organization, wellness, habit_building`;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are a productivity expert AI that analyzes user patterns and provides intelligent task suggestions. Always respond with valid JSON only.' 
-          },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 800,
-        temperature: 0.7,
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': geminiApiKey,
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 800,
+          }
+        }),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
-    // Parse the JSON response
-    const suggestions = JSON.parse(aiResponse);
+    if (!generatedText) {
+      throw new Error('No response from Gemini');
+    }
+
+    // Parse JSON from response
+    const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error('No JSON array found in response');
+    }
+
+    const suggestions = JSON.parse(jsonMatch[0]);
     
     // Validate and ensure proper format
     return suggestions.map((s: any) => ({
@@ -237,7 +248,7 @@ Types can be: productivity_optimization, skill_development, organization, wellne
     }));
 
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('Gemini API error:', error);
     
     // Fallback suggestions based on analysis
     return [
