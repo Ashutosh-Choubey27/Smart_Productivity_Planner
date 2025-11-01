@@ -45,16 +45,17 @@ export const AITaskBreakdown = ({ taskTitle, taskDescription, onBreakdown }: Tas
         onBreakdown?.(validSubtasks);
 
         toast({
-          title: "Task Breakdown Generated!",
+          title: "✓ Task Breakdown Generated!",
           description: `Split "${taskTitle}" into ${validSubtasks.length} manageable subtasks.`,
+          className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
         });
       }
     } catch (error) {
       console.error('Error generating breakdown:', error);
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: "Failed to generate task breakdown. Please try again.",
-        variant: "destructive"
+        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
       });
     } finally {
       setLoading(false);
@@ -72,8 +73,9 @@ export const AITaskBreakdown = ({ taskTitle, taskDescription, onBreakdown }: Tas
     });
 
     toast({
-      title: "Subtask Added!",
+      title: "✓ Subtask Added!",
       description: `"${subtask}" has been added to your tasks.`,
+      className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
     });
   };
 
@@ -90,8 +92,9 @@ export const AITaskBreakdown = ({ taskTitle, taskDescription, onBreakdown }: Tas
     });
 
     toast({
-      title: "All Subtasks Added!",
+      title: "✓ All Subtasks Added!",
       description: `Added ${subtasks.length} subtasks to your task list.`,
+      className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
     });
 
     setSubtasks([]);

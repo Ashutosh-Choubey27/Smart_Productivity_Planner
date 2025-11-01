@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    /* Base Colors */
-    --background: 240 10% 98%;
+    /* Base Colors - Glassmorphism enabled */
+    --background: 220 20% 96%;
     --foreground: 240 10% 8%;
 
     /* Card System */
@@ -53,18 +53,21 @@
     --input: 240 6% 90%;
     --ring: 215 84% 45%;
 
-    /* Effects */
+    /* Effects - Enhanced for glassmorphism */
     --gradient-primary: linear-gradient(135deg, hsl(215 84% 45%), hsl(215 84% 55%));
     --gradient-hero: linear-gradient(135deg, hsl(215 84% 45%), hsl(25 95% 55%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(240 5% 98%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100% / 0.7), hsl(240 5% 98% / 0.5));
     --gradient-progress: linear-gradient(90deg, hsl(215 84% 45%), hsl(280 85% 60%), hsl(25 95% 55%));
     --gradient-cool: linear-gradient(135deg, hsl(280 85% 60%), hsl(215 84% 55%), hsl(180 85% 55%));
     --gradient-neon: linear-gradient(90deg, hsl(280 85% 60%), hsl(315 85% 65%));
+    --gradient-background: linear-gradient(135deg, hsl(220 20% 96%), hsl(215 30% 92%), hsl(210 40% 94%));
     --shadow-soft: 0 2px 8px -2px hsl(240 10% 8% / 0.1);
     --shadow-medium: 0 4px 16px -4px hsl(240 10% 8% / 0.15);
     --shadow-large: 0 8px 32px -8px hsl(240 10% 8% / 0.2);
     --shadow-glow: 0 0 20px hsl(215 84% 45% / 0.3);
     --shadow-neon: 0 0 30px hsl(280 85% 60% / 0.4);
+    --glass-border: 1px solid hsl(0 0% 100% / 0.2);
+    --glass-bg: hsl(0 0% 100% / 0.6);
 
     --radius: 0.75rem;
 
@@ -86,8 +89,8 @@
   }
 
   .dark {
-    /* Base Colors */
-    --background: 240 10% 8%;
+    /* Base Colors - Glassmorphism enabled */
+    --background: 240 12% 10%;
     --foreground: 240 5% 98%;
 
     /* Card System */
@@ -133,18 +136,21 @@
     --input: 240 8% 20%;
     --ring: 215 84% 65%;
 
-    /* Effects */
+    /* Effects - Enhanced for glassmorphism */
     --gradient-primary: linear-gradient(135deg, hsl(215 84% 65%), hsl(215 84% 75%));
     --gradient-hero: linear-gradient(135deg, hsl(215 84% 65%), hsl(25 95% 65%));
-    --gradient-card: linear-gradient(145deg, hsl(240 8% 12%), hsl(240 8% 15%));
+    --gradient-card: linear-gradient(145deg, hsl(240 8% 12% / 0.7), hsl(240 8% 15% / 0.5));
     --gradient-progress: linear-gradient(90deg, hsl(215 84% 65%), hsl(280 85% 70%), hsl(25 95% 65%));
     --gradient-cool: linear-gradient(135deg, hsl(280 85% 70%), hsl(215 84% 65%), hsl(180 85% 65%));
     --gradient-neon: linear-gradient(90deg, hsl(280 85% 70%), hsl(315 85% 75%));
+    --gradient-background: linear-gradient(135deg, hsl(240 12% 10%), hsl(235 15% 12%), hsl(230 18% 14%));
     --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
     --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
     --shadow-large: 0 8px 32px -8px hsl(0 0% 0% / 0.5);
     --shadow-glow: 0 0 20px hsl(215 84% 65% / 0.4);
     --shadow-neon: 0 0 30px hsl(280 85% 70% / 0.5);
+    --glass-border: 1px solid hsl(0 0% 100% / 0.1);
+    --glass-bg: hsl(240 8% 12% / 0.6);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -162,14 +168,20 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: var(--gradient-background);
+    background-attachment: fixed;
   }
 }
 
 @layer components {
-  /* Task Components */
+  /* Task Components - Glassmorphism */
   .task-card {
-    @apply bg-gradient-card border border-border rounded-xl p-4 shadow-soft hover:shadow-medium transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm;
+    background: var(--glass-bg);
+    border: var(--glass-border);
+    @apply rounded-xl p-4 shadow-medium hover:shadow-large transition-all duration-300 hover:scale-[1.02];
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .task-card-high {

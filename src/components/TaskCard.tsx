@@ -218,10 +218,10 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 hover:bg-muted"
+              className="h-8 w-8 p-0 hover:bg-primary/10 group"
               onClick={() => onEdit(task)}
             >
-              <Edit className="h-3 w-3" />
+              <Edit className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
             </Button>
             <Button
               variant="ghost"

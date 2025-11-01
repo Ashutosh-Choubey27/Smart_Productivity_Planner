@@ -48,18 +48,23 @@ export const AISuggestions = () => {
         }));
         setSuggestions(mapped);
         toast({
-          title: "AI Suggestions Generated!",
+          title: "✓ AI Suggestions Generated!",
           description: `Generated ${mapped.length} new task suggestions based on your patterns.`,
+          className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
         });
       } else {
-        toast({ title: "No suggestions", description: "AI did not return suggestions this time." });
+        toast({ 
+          title: "ℹ️ No suggestions", 
+          description: "AI did not return suggestions this time.",
+          className: "bg-blue-600 border-blue-500 text-white dark:bg-blue-600 dark:text-white backdrop-blur-md",
+        });
       }
     } catch (error: any) {
       console.error('Error generating suggestions:', error);
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: error?.message || "Failed to generate AI suggestions. Please try again.",
-        variant: "destructive"
+        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
       });
     } finally {
       setRefreshing(false);
@@ -72,8 +77,9 @@ export const AISuggestions = () => {
       // Validate the suggestion title before adding
       if (!isValidTaskTitle(suggestion.suggestion_text)) {
         toast({
-          title: "Invalid Suggestion",
+          title: "⚠️ Invalid Suggestion",
           description: "This AI suggestion doesn't meet our quality standards. Skipping...",
+          className: "bg-yellow-600 border-yellow-500 text-white dark:bg-yellow-600 dark:text-white backdrop-blur-md",
         });
         // Remove from UI only
         setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
@@ -94,15 +100,16 @@ export const AISuggestions = () => {
       setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
 
       toast({
-        title: "Suggestion Applied!",
+        title: "✓ Suggestion Applied!",
         description: "The AI suggestion has been added to your tasks.",
+        className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
       });
     } catch (error) {
       console.error('Error applying suggestion:', error);
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: "Failed to apply suggestion. Please try again.",
-        variant: "destructive"
+        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
       });
     } finally {
       setLoading(false);
@@ -112,7 +119,11 @@ export const AISuggestions = () => {
   const dismissSuggestion = async (suggestion: AISuggestion) => {
     // Local mode: simply remove from list
     setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-    toast({ title: "Suggestion Dismissed", description: "The suggestion has been removed." });
+    toast({ 
+      title: "🗑️ Suggestion Dismissed", 
+      description: "The suggestion has been removed.",
+      className: "bg-gray-600 border-gray-500 text-white dark:bg-gray-600 dark:text-white backdrop-blur-md",
+    });
   };
 
   const getSuggestionTypeIcon = (type: string) => {

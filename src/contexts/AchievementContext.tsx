@@ -186,6 +186,7 @@ export const AchievementProvider = ({ children }: AchievementProviderProps) => {
         toast({
           title: "🎉 Achievement Unlocked!",
           description: `${ach.icon} ${ach.title}: ${ach.description}`,
+          className: "bg-purple-600 border-purple-500 text-white dark:bg-purple-600 dark:text-white backdrop-blur-md",
         });
         
         return {

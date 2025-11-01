@@ -111,9 +111,9 @@ export const TaskForm = ({
     // Ensure custom category is named
     if (data.category === 'custom' && !customCategory.trim()) {
       toast({
-        title: 'Please name your category',
+        title: '⚠️ Please name your category',
         description: 'Enter a category name when selecting Custom.',
-        variant: 'destructive',
+        className: "bg-yellow-600 border-yellow-500 text-white dark:bg-yellow-600 dark:text-white backdrop-blur-md",
       });
       return;
     }
@@ -131,8 +131,9 @@ export const TaskForm = ({
     if (!editingTask) {
       try {
         toast({
-          title: "Creating task...",
+          title: "⏳ Creating task...",
           description: "Generating subtasks to help you track progress.",
+          className: "bg-blue-600 border-blue-500 text-white dark:bg-blue-600 dark:text-white backdrop-blur-md",
         });
 
         const { data: breakdownData, error } = await supabase.functions.invoke('ai-task-breakdown', {
@@ -154,9 +155,9 @@ export const TaskForm = ({
           taskData.progress = 0;
 
           toast({
-            title: "Task created!",
+            title: "✓ Task created!",
             description: `Generated ${subtasks.length} subtasks to track your progress.`,
-            className: "bg-green-500/10 border-green-500/50 text-green-600 dark:text-green-400",
+            className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
           });
         } else {
           taskData.progress = 0;
@@ -192,8 +193,9 @@ export const TaskForm = ({
     if (text.trim()) {
       form.setValue('title', text.trim());
       toast({
-        title: "Voice input captured!",
+        title: "🎤 Voice input captured!",
         description: "Task title filled from voice input.",
+        className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
       });
     }
   };

@@ -105,9 +105,9 @@ export const Dashboard = () => {
     });
     
     toast({
-      title: "Task created!",
+      title: "✓ Task created!",
       description: `"${taskData.title}" has been added to your tasks.`,
-      className: "bg-green-500/10 border-green-500/50 text-green-600 dark:text-green-400",
+      className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
     });
   };
 
@@ -115,8 +115,9 @@ export const Dashboard = () => {
     if (editingTask) {
       updateTask(editingTask.id, taskData);
       toast({
-        title: "Task updated!",
+        title: "✓ Task updated!",
         description: `"${taskData.title}" has been updated.`,
+        className: "bg-blue-600 border-blue-500 text-white dark:bg-blue-600 dark:text-white backdrop-blur-md",
       });
       setEditingTask(undefined);
     }
@@ -126,9 +127,9 @@ export const Dashboard = () => {
     const task = tasks.find(t => t.id === id);
     deleteTask(id);
     toast({
-      title: "Task deleted",
+      title: "🗑️ Task deleted",
       description: task ? `"${task.title}" has been removed.` : "Task has been removed.",
-      variant: "destructive",
+      className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
     });
   };
 
@@ -153,8 +154,11 @@ export const Dashboard = () => {
       });
 
       toast({
-        title: task.completed ? "Task marked as pending" : "Task completed!",
+        title: task.completed ? "⏸️ Task marked as pending" : "✓ Task completed!",
         description: `"${task.title}" ${task.completed ? 'is now pending' : 'has been completed'}.`,
+        className: task.completed 
+          ? "bg-yellow-600 border-yellow-500 text-white dark:bg-yellow-600 dark:text-white backdrop-blur-md"
+          : "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
       });
     }
   };

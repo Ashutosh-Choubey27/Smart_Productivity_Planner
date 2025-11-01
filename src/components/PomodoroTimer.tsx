@@ -123,6 +123,7 @@ export const PomodoroTimer = ({ onFocusComplete }: PomodoroTimerProps) => {
         toast({
           title: "🎉 Pomodoro Complete!",
           description: `Great job! You've completed ${newCompletedPomodoros} pomodoro${newCompletedPomodoros !== 1 ? 's' : ''} today.`,
+          className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
         });
         
         showNotification(
@@ -136,8 +137,9 @@ export const PomodoroTimer = ({ onFocusComplete }: PomodoroTimerProps) => {
         setTimeLeft(TIMER_DURATIONS[nextMode]);
       } else {
         toast({
-          title: "Break Complete! ⚡",
+          title: "⚡ Break Complete!",
           description: "Ready to get back to work? Let's stay productive!",
+          className: "bg-blue-600 border-blue-500 text-white dark:bg-blue-600 dark:text-white backdrop-blur-md",
         });
         
         showNotification(

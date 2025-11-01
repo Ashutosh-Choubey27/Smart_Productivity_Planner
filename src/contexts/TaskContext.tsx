@@ -86,9 +86,9 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
     const validation = validateTaskTitle(taskData.title);
     if (!validation.isValid) {
       toast({
-        title: "Invalid Task Title",
+        title: "❌ Invalid Task Title",
         description: getTaskTitleError(taskData.title) || "Please enter a meaningful task name",
-        variant: "destructive"
+        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
       });
       return;
     }
@@ -127,9 +127,9 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
       const validation = validateTaskTitle(updates.title);
       if (!validation.isValid) {
         toast({
-          title: "Invalid Task Title",
+          title: "❌ Invalid Task Title",
           description: getTaskTitleError(updates.title) || "Please enter a meaningful task name",
-          variant: "destructive"
+          className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
         });
         return;
       }

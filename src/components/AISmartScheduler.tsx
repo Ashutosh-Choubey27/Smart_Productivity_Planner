@@ -30,8 +30,9 @@ export const AISmartScheduler = () => {
 
       if (pendingTasks.length === 0) {
         toast({
-          title: "No Pending Tasks",
+          title: "ℹ️ No Pending Tasks",
           description: "Add some tasks first to generate an optimized schedule.",
+          className: "bg-blue-600 border-blue-500 text-white dark:bg-blue-600 dark:text-white backdrop-blur-md",
         });
         setLoading(false);
         return;
@@ -56,16 +57,17 @@ export const AISmartScheduler = () => {
         setSchedule(data.schedule);
 
         toast({
-          title: "Smart Schedule Generated!",
+          title: "✓ Smart Schedule Generated!",
           description: `Created an optimized schedule for ${data.schedule.length} tasks.`,
+          className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
         });
       }
     } catch (error) {
       console.error('Error generating schedule:', error);
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: "Failed to generate smart schedule. Please try again.",
-        variant: "destructive"
+        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
       });
     } finally {
       setLoading(false);
