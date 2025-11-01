@@ -107,6 +107,7 @@ export const Dashboard = () => {
     toast({
       title: "Task created!",
       description: `"${taskData.title}" has been added to your tasks.`,
+      className: "bg-green-500/10 border-green-500/50 text-green-600 dark:text-green-400",
     });
   };
 

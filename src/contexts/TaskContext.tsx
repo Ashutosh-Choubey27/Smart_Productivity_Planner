@@ -78,9 +78,7 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
 
   // Save tasks to localStorage whenever tasks change
   useEffect(() => {
-    if (tasks.length > 0) {
-      localStorage.setItem('productivity-planner-tasks', JSON.stringify(tasks));
-    }
+    localStorage.setItem('productivity-planner-tasks', JSON.stringify(tasks));
   }, [tasks]);
 
   const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'progress'> & { progress?: number }) => {

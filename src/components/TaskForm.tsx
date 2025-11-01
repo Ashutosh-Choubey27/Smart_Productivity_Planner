@@ -156,6 +156,7 @@ export const TaskForm = ({
           toast({
             title: "Task created!",
             description: `Generated ${subtasks.length} subtasks to track your progress.`,
+            className: "bg-green-500/10 border-green-500/50 text-green-600 dark:text-green-400",
           });
         } else {
           taskData.progress = 0;
