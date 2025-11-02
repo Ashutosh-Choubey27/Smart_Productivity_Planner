@@ -20,6 +20,7 @@ export interface Task {
   completed: boolean;
   progress: number; // 0-100 percentage of completion
   subtasks?: Subtask[]; // Auto-generated subtasks
+  isAcademic?: boolean; // Flag to distinguish academic tasks from general tasks
   createdAt: Date;
   updatedAt: Date;
 }
@@ -112,7 +113,8 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
       priority: newTask.priority,
       category: newTask.category,
       due_date: newTask.dueDate?.toISOString(),
-      completed: newTask.completed
+      completed: newTask.completed,
+      is_academic: newTask.isAcademic || false
     }).then(({ error }) => {
       if (error) {
         console.error('Error saving task to Supabase:', error);
@@ -151,7 +153,8 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
         category: updates.category || taskToUpdate.category,
         due_date: updates.dueDate?.toISOString() || taskToUpdate.dueDate?.toISOString(),
         completed: updates.completed !== undefined ? updates.completed : taskToUpdate.completed,
-        completed_at: updates.completed ? new Date().toISOString() : null
+        completed_at: updates.completed ? new Date().toISOString() : null,
+        is_academic: updates.isAcademic !== undefined ? updates.isAcademic : (taskToUpdate.isAcademic || false)
       }).eq('id', id).then(({ error }) => {
         if (error) console.error('Error updating task in Supabase:', error);
       });

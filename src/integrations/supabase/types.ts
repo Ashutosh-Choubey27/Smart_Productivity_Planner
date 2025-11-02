@@ -133,6 +133,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          is_academic: boolean
           priority: string
           title: string
           updated_at: string
@@ -146,6 +147,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          is_academic?: boolean
           priority: string
           title: string
           updated_at?: string
@@ -159,6 +161,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          is_academic?: boolean
           priority?: string
           title?: string
           updated_at?: string

@@ -306,14 +306,15 @@ export const Dashboard = () => {
                 </Card>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {filteredAndSortedTasks.map(task => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onToggle={handleToggleTask}
-                      onEdit={setEditingTask}
-                      onDelete={handleDeleteTask}
-                    />
+                  {filteredAndSortedTasks.map((task, index) => (
+                    <div key={task.id} className={`stagger-item stagger-${Math.min(index + 1, 8)}`}>
+                      <TaskCard
+                        task={task}
+                        onToggle={handleToggleTask}
+                        onEdit={setEditingTask}
+                        onDelete={handleDeleteTask}
+                      />
+                    </div>
                   ))}
                 </div>
               )}

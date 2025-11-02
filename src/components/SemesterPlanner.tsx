@@ -61,22 +61,9 @@ export const SemesterPlanner = () => {
   const [quickAddCategory, setQuickAddCategory] = useState<string>('');
   const { showGuide, hideGuide, showGuideAgain } = useSemesterGuide();
 
-  // Improved academic task filtering logic
+  // Filter only tasks created as academic tasks
   const academicTasks = useMemo(() => {
-    return tasks.filter(task => {
-      // Check if task category matches academic subjects or study categories
-      const categoryMatch = ACADEMIC_SUBJECTS.includes(task.category) || 
-                           STUDY_CATEGORIES.includes(task.category);
-      
-      // Check if task has academic keywords in title or description
-      const academicKeywords = [...ACADEMIC_SUBJECTS, ...STUDY_CATEGORIES];
-      const contentMatch = academicKeywords.some(keyword => 
-        task.title.toLowerCase().includes(keyword.toLowerCase()) ||
-        (task.description && task.description.toLowerCase().includes(keyword.toLowerCase()))
-      );
-
-      return categoryMatch || contentMatch;
-    });
+    return tasks.filter(task => task.isAcademic === true);
   }, [tasks]);
 
   // Get available subjects from actual tasks
@@ -127,7 +114,7 @@ export const SemesterPlanner = () => {
   }, [academicTasks, selectedSubject]);
 
   const handleAddAcademicTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    addTask(taskData);
+    addTask({ ...taskData, isAcademic: true });
     setIsAddingTask(false);
   };
 
@@ -145,7 +132,8 @@ export const SemesterPlanner = () => {
         category: defaultCategory,
         priority: template.priority,
         dueDate,
-        completed: false
+        completed: false,
+        isAcademic: true
       });
     } else {
       setQuickAddCategory(category);
@@ -271,7 +259,7 @@ export const SemesterPlanner = () => {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6 animate-enter">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
+            <Card className="stagger-item stagger-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Academic Tasks</CardTitle>
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
@@ -284,7 +272,7 @@ export const SemesterPlanner = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="stagger-item stagger-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Upcoming Deadlines</CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -297,7 +285,7 @@ export const SemesterPlanner = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="stagger-item stagger-3">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Overall Progress</CardTitle>
                 <Target className="h-4 w-4 text-muted-foreground" />
@@ -320,7 +308,7 @@ export const SemesterPlanner = () => {
           </div>
 
           {/* Quick Actions Section */}
-          <Card>
+          <Card className="stagger-item stagger-4">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5" />
@@ -329,11 +317,11 @@ export const SemesterPlanner = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {Object.keys(TASK_TEMPLATES).map(category => (
+                {Object.keys(TASK_TEMPLATES).map((category, index) => (
                   <Button
                     key={category}
                     variant="outline"
-                    className="h-auto p-3 text-xs"
+                    className={`h-auto p-3 text-xs stagger-item stagger-${Math.min(index + 5, 8)}`}
                     onClick={() => createQuickTask(category, selectedSubject !== 'all' ? selectedSubject : undefined)}
                   >
                     <div className="text-center">
@@ -352,8 +340,8 @@ export const SemesterPlanner = () => {
         {/* Subjects Tab */}
         <TabsContent value="subjects" className="space-y-6 animate-enter">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(subjectStats).map(([subject, stats]) => (
-              <Card key={subject} className="hover:shadow-md transition-shadow">
+            {Object.entries(subjectStats).map(([subject, stats], index) => (
+              <Card key={subject} className={`hover:shadow-md transition-shadow stagger-item stagger-${Math.min(index + 1, 8)}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium truncate">{subject}</CardTitle>
@@ -405,8 +393,8 @@ export const SemesterPlanner = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {upcomingDeadlines.map((task) => (
-                    <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border">
+                  {upcomingDeadlines.map((task, index) => (
+                    <div key={task.id} className={`flex items-center justify-between p-3 rounded-lg border stagger-item stagger-${Math.min(index + 1, 8)}`}>
                       <div className="flex-1">
                         <h4 className="font-medium">{task.title}</h4>
                         <p className="text-sm text-muted-foreground">{task.category}</p>
