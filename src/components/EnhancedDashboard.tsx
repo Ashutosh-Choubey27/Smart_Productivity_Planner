@@ -44,12 +44,12 @@ export const EnhancedDashboard: React.FC = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header with Smart Notifications and User Profile */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between animate-fade-in">
+        <div className="stagger-1">
           <h1 className="text-3xl font-bold">Smart Productivity Hub</h1>
           <p className="text-muted-foreground">Your AI-powered productivity command center</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 stagger-2">
           <SmartNotifications />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -82,7 +82,7 @@ export const EnhancedDashboard: React.FC = () => {
 
       {/* Enhanced Navigation - Responsive Grid */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 w-full gap-1">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 w-full gap-1 animate-slide-in stagger-3">
           <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm">
             <LayoutDashboard className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Overview</span>
@@ -120,10 +120,10 @@ export const EnhancedDashboard: React.FC = () => {
         {/* Overview Tab - Main Dashboard */}
         <TabsContent value="overview" className="space-y-6">
           <div className="grid lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 animate-fade-in stagger-1">
               <Dashboard />
             </div>
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fade-in stagger-2">
               <TaskStats compact />
               <AISuggestions />
             </div>
@@ -133,8 +133,10 @@ export const EnhancedDashboard: React.FC = () => {
         {/* Advanced Analytics */}
         <TabsContent value="analytics" className="space-y-6">
           <div className="grid gap-6">
-            <AdvancedAnalytics />
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="animate-fade-in stagger-1">
+              <AdvancedAnalytics />
+            </div>
+            <div className="grid md:grid-cols-2 gap-6 animate-fade-in stagger-2">
               <TaskAnalytics />
               <div className="space-y-6">
                 <TaskStats compact />
@@ -145,11 +147,11 @@ export const EnhancedDashboard: React.FC = () => {
 
         {/* AI Tools Hub */}
         <TabsContent value="ai-tools" className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 animate-fade-in stagger-1">
             <AISmartScheduler />
             <AISuggestions />
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 animate-fade-in stagger-2">
             <AITimeEstimator 
               taskTitle="Sample Task" 
               taskDescription="Sample description for time estimation"
@@ -165,8 +167,10 @@ export const EnhancedDashboard: React.FC = () => {
         {/* Focus & Productivity */}
         <TabsContent value="focus" className="space-y-6">
           <div className="grid lg:grid-cols-2 gap-6">
-            <FocusMode />
-            <div className="space-y-6">
+            <div className="animate-fade-in stagger-1">
+              <FocusMode />
+            </div>
+            <div className="space-y-6 animate-fade-in stagger-2">
               <TaskStats compact />
               <AISuggestions />
             </div>
@@ -174,25 +178,27 @@ export const EnhancedDashboard: React.FC = () => {
         </TabsContent>
 
         {/* Habit Tracking */}
-        <TabsContent value="habits" className="space-y-6">
+        <TabsContent value="habits" className="space-y-6 animate-fade-in">
           <HabitTracker />
         </TabsContent>
 
         {/* Team Collaboration */}
-        <TabsContent value="team" className="space-y-6">
+        <TabsContent value="team" className="space-y-6 animate-fade-in">
           <TeamCollaboration />
         </TabsContent>
 
         {/* Semester Planning */}
-        <TabsContent value="planning" className="space-y-6">
+        <TabsContent value="planning" className="space-y-6 animate-fade-in">
           <SemesterPlanner />
         </TabsContent>
 
         {/* Insights & Suggestions */}
         <TabsContent value="insights" className="space-y-6">
           <div className="grid gap-6">
-            <AdvancedAnalytics />
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="animate-fade-in stagger-1">
+              <AdvancedAnalytics />
+            </div>
+            <div className="grid md:grid-cols-2 gap-6 animate-fade-in stagger-2">
               <AISuggestions />
               <AISmartScheduler />
             </div>
