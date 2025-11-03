@@ -73,7 +73,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
   return (
     <Card 
       className={cn(
-        'task-card animate-slide-in transition-all duration-300',
+        'task-card animate-slide-in transition-all duration-300 hover-lift',
         getTaskCardClass(task.priority),
         task.completed && 'opacity-60',
         isDeleting && 'animate-slide-out opacity-0'
@@ -113,7 +113,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
             </div>
           </div>
           
-          <Badge className={getPriorityColor(task.priority)}>
+          <Badge className={cn(getPriorityColor(task.priority), "hover-glow cursor-default")}>
             {task.priority}
           </Badge>
         </div>
@@ -218,7 +218,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 hover:bg-primary/10 group"
+              className="h-8 w-8 p-0 hover:bg-primary/10 group hover-rotate"
               onClick={() => onEdit(task)}
             >
               <Edit className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -226,7 +226,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+              className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground hover-rotate"
               onClick={handleDelete}
             >
               <Trash2 className="h-3 w-3" />

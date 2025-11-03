@@ -45,22 +45,22 @@ export const TaskStats = ({ compact = false }: { compact?: boolean }) => {
 
   return (
     <div className={`grid gap-4 mb-6 ${compact ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
-      {stats.map((stat) => {
+      {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card key={stat.title} className="task-card hover:shadow-medium overflow-hidden">
+          <Card key={stat.title} className={`task-card hover-lift overflow-hidden animate-scale-in stagger-${index + 1}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
               </CardTitle>
-              <div className={`${stat.bgColor} p-2 rounded-md shrink-0`}>
+              <div className={`${stat.bgColor} p-2 rounded-md shrink-0 hover-rotate`}>
                 <Icon className={`h-4 w-4 ${stat.color} shrink-0`} />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-2xl font-bold animate-fade-in">{stat.value}</div>
               {stat.title === 'Completed' && totalTasks > 0 && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground animate-fade-in stagger-1">
                   {completionRate}% completion rate
                 </p>
               )}

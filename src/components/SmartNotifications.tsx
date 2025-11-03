@@ -135,18 +135,18 @@ export const SmartNotifications: React.FC = () => {
         variant="outline"
         size="sm"
         onClick={() => setShowNotifications(!showNotifications)}
-        className="relative"
+        className="relative hover-glow"
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
-          <Badge variant="destructive" className="absolute -top-2 -right-2 text-xs px-1.5 py-0.5">
+          <Badge variant="destructive" className="absolute -top-2 -right-2 text-xs px-1.5 py-0.5 animate-pulse-glow animate-bounce">
             {unreadCount}
           </Badge>
         )}
       </Button>
 
       {showNotifications && (
-        <Card className="absolute right-0 top-full mt-2 w-80 z-50 shadow-lg">
+        <Card className="absolute right-0 top-full mt-2 w-80 z-50 shadow-lg animate-scale-in">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Bell className="w-4 h-4" />
@@ -159,10 +159,10 @@ export const SmartNotifications: React.FC = () => {
                 No notifications at the moment
               </p>
             ) : (
-              notifications.map(notification => (
+              notifications.map((notification, index) => (
                 <div
                   key={notification.id}
-                  className={`p-3 rounded-lg border ${getPriorityColor(notification.priority)}`}
+                  className={`p-3 rounded-lg border ${getPriorityColor(notification.priority)} animate-slide-in-right stagger-${Math.min(index + 1, 8)}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-2 flex-1">
