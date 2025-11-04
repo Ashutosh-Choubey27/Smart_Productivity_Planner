@@ -164,6 +164,13 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
   const deleteTask = (id: string) => {
     setTasks(prev => prev.filter(task => task.id !== id));
     
+    // Show success notification
+    toast({
+      title: "✅ Task Deleted",
+      description: "Your task has been successfully removed",
+      className: "bg-success border-success/50 text-white dark:bg-success dark:text-white backdrop-blur-md",
+    });
+    
     // Delete from Supabase as well
     supabase.from('tasks').delete().eq('id', id).then(({ error }) => {
       if (error) console.error('Error deleting task from Supabase:', error);

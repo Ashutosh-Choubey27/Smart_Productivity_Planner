@@ -19,6 +19,7 @@ import { TaskFilter, FilterType, PriorityFilter, SortType } from '@/components/T
 import { DragDropTaskBoard } from '@/components/DragDropTaskBoard';
 import { SemesterPlanner } from '@/components/SemesterPlanner';
 import { ExportPanel } from '@/components/ExportPanel';
+import { MotivationalQuoteCard } from '@/components/MotivationalQuoteCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -124,13 +125,7 @@ export const Dashboard = () => {
   };
 
   const handleDeleteTask = (id: string) => {
-    const task = tasks.find(t => t.id === id);
     deleteTask(id);
-    toast({
-      title: "🗑️ Task deleted",
-      description: task ? `"${task.title}" has been removed.` : "Task has been removed.",
-      className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
-    });
   };
 
   const handleToggleTask = (id: string) => {
@@ -170,15 +165,6 @@ export const Dashboard = () => {
     setCategoryFilter('all');
   };
 
-  const motivationalQuotes = [
-    "The secret of getting ahead is getting started. - Mark Twain",
-    "Success is not final, failure is not fatal: it is the courage to continue that counts. - Winston Churchill",
-    "Don't watch the clock; do what it does. Keep going. - Sam Levenson",
-    "The future depends on what you do today. - Mahatma Gandhi"
-  ];
-
-  const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 animate-fade-in">
@@ -202,18 +188,7 @@ export const Dashboard = () => {
           </div>
           
           {/* Motivational Quote */}
-          <Card className="mt-6 bg-gradient-card border-none shadow-soft">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <Trophy className="h-5 w-5 text-primary" />
-                </div>
-                <p className="text-sm italic text-muted-foreground flex-1">
-                  {randomQuote}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <MotivationalQuoteCard />
         </div>
 
         {/* Main Content Tabs */}
