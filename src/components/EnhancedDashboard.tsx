@@ -22,7 +22,7 @@ import { TaskAnalytics } from './TaskAnalytics';
 import { AISuggestions } from './AISuggestions';
 import { AISmartScheduler } from './AISmartScheduler';
 import { AITimeEstimator } from './AITimeEstimator';
-import { AITaskBreakdown } from './AITaskBreakdown';
+
 import { SemesterPlanner } from './SemesterPlanner';
 import { 
   LayoutDashboard, 
@@ -82,7 +82,7 @@ export const EnhancedDashboard: React.FC = () => {
 
       {/* Enhanced Navigation - Responsive Grid */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 w-full gap-1 animate-slide-in-top stagger-1">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 w-full gap-1 animate-slide-in-top stagger-1">
           <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm">
             <LayoutDashboard className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Overview</span>
@@ -106,10 +106,6 @@ export const EnhancedDashboard: React.FC = () => {
           <TabsTrigger value="team" className="gap-1.5 text-xs sm:text-sm">
             <Users className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Team</span>
-          </TabsTrigger>
-          <TabsTrigger value="planning" className="gap-1.5 text-xs sm:text-sm">
-            <Calendar className="w-4 h-4 shrink-0" />
-            <span className="hidden sm:inline truncate">Planning</span>
           </TabsTrigger>
           <TabsTrigger value="insights" className="gap-1.5 text-xs sm:text-sm">
             <Lightbulb className="w-4 h-4 shrink-0" />
@@ -157,20 +153,12 @@ export const EnhancedDashboard: React.FC = () => {
               <AISuggestions />
             </div>
           </div>
-          <div className="grid md:grid-cols-2 gap-6 stagger-3">
-            <div className="animate-slide-in-left">
-              <AITimeEstimator 
-                taskTitle="Sample Task" 
-                taskDescription="Sample description for time estimation"
-                taskCategory="Work"
-              />
-            </div>
-            <div className="animate-slide-in-right">
-              <AITaskBreakdown 
-                taskTitle="Complete Project Report"
-                taskDescription="Research and write comprehensive project analysis"
-              />
-            </div>
+          <div className="animate-slide-in-bottom stagger-3">
+            <AITimeEstimator 
+              taskTitle="Sample Task" 
+              taskDescription="Sample description for time estimation"
+              taskCategory="Work"
+            />
           </div>
         </TabsContent>
 
@@ -195,11 +183,6 @@ export const EnhancedDashboard: React.FC = () => {
         {/* Team Collaboration */}
         <TabsContent value="team" className="space-y-6 animate-scale-in stagger-2">
           <TeamCollaboration />
-        </TabsContent>
-
-        {/* Semester Planning */}
-        <TabsContent value="planning" className="space-y-6 animate-slide-in-bottom stagger-2">
-          <SemesterPlanner />
         </TabsContent>
 
         {/* Insights & Suggestions */}
