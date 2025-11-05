@@ -188,9 +188,7 @@ export const Dashboard = () => {
           </div>
           
           {/* Motivational Quote */}
-          <div className="mt-6">
-            <MotivationalQuoteCard />
-          </div>
+          <MotivationalQuoteCard />
         </div>
 
         {/* Main Content Tabs */}

@@ -156,10 +156,6 @@ export default {
 						opacity: '0.95',
 						transform: 'scale(1.02)'
 					}
-				},
-				'border-spin': {
-					'0%': { transform: 'rotate(0deg)' },
-					'100%': { transform: 'rotate(360deg)' }
 				}
 			},
 			animation: {
@@ -170,8 +166,7 @@ export default {
 				'shimmer': 'shimmer 2s infinite',
 				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
 				'gradientRotate': 'gradientRotate 3s ease infinite',
-				'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
-				'border-spin': 'border-spin 3s linear infinite'
+				'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite'
 			}
 		}
 	},
