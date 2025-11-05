@@ -48,9 +48,7 @@ export const TaskStats = ({ compact = false }: { compact?: boolean }) => {
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card key={stat.title} className={`task-card hover-lift overflow-hidden animate-scale-in stagger-${index + 1} relative before:absolute before:top-0 before:left-0 before:w-3 before:h-3 before:border-t-2 before:border-l-2 before:border-transparent before:bg-gradient-to-br before:from-cyan-500 before:via-purple-500 before:to-pink-500 before:bg-clip-border after:absolute after:top-0 after:right-0 after:w-3 after:h-3 after:border-t-2 after:border-r-2 after:border-transparent after:bg-gradient-to-bl after:from-cyan-500 after:via-purple-500 after:to-pink-500 after:bg-clip-border`}>
-            <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-transparent bg-gradient-to-tr from-cyan-500 via-purple-500 to-pink-500 bg-clip-border" />
-            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-transparent bg-gradient-to-tl from-cyan-500 via-purple-500 to-pink-500 bg-clip-border" />
+          <Card key={stat.title} className={`task-card hover-lift overflow-hidden animate-scale-in stagger-${index + 1}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
