@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { CalendarIcon, Plus, Save } from 'lucide-react';
+import { CalendarIcon, Plus, Save, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Task } from '@/contexts/TaskContext';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { VoiceTaskInput } from '@/components/VoiceTaskInput';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { validateTaskTitle } from '@/utils/validation';
+import { validateTaskTitle, getTaskTitleError } from '@/utils/validation';
 import { supabase } from '@/integrations/supabase/client';
 
 
@@ -80,6 +80,7 @@ export const TaskForm = ({
 }: TaskFormProps) => {
   const [open, setOpen] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
+  const [titleWarning, setTitleWarning] = useState<string | null>(null);
   const { toast } = useToast();
   const customInputRef = useRef<HTMLInputElement>(null);
 
@@ -192,11 +193,24 @@ export const TaskForm = ({
   const handleVoiceInput = (text: string) => {
     if (text.trim()) {
       form.setValue('title', text.trim());
+      // Validate immediately
+      const error = getTaskTitleError(text.trim());
+      setTitleWarning(error);
       toast({
         title: "🎤 Voice input captured!",
         description: "Task title filled from voice input.",
         className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
       });
+    }
+  };
+
+  const handleTitleChange = (value: string) => {
+    // Real-time validation as user types
+    if (value.length >= 2) {
+      const error = getTaskTitleError(value);
+      setTitleWarning(error);
+    } else {
+      setTitleWarning(null);
     }
   };
 
@@ -243,10 +257,23 @@ export const TaskForm = ({
                   <FormControl>
                     <Input 
                       placeholder="Enter task title..." 
-                      {...field} 
-                      className="focus:ring-2 focus:ring-primary"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        handleTitleChange(e.target.value);
+                      }}
+                      className={cn(
+                        "focus:ring-2 focus:ring-primary",
+                        titleWarning && "border-yellow-500 focus:ring-yellow-500"
+                      )}
                     />
                   </FormControl>
+                  {titleWarning && (
+                    <div className="flex items-start gap-2 text-sm text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 p-3 rounded-md border border-yellow-200 dark:border-yellow-800 animate-fade-in">
+                      <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>{titleWarning}</span>
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
