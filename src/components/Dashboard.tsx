@@ -188,7 +188,9 @@ export const Dashboard = () => {
           </div>
           
           {/* Motivational Quote */}
-          <MotivationalQuoteCard />
+          <div className="mt-6">
+            <MotivationalQuoteCard />
+          </div>
         </div>
 
         {/* Main Content Tabs */}
@@ -198,25 +200,25 @@ export const Dashboard = () => {
               <Settings className="h-4 w-4" />
               Tasks
             </TabsTrigger>
-            <TabsTrigger value="board" className="flex items-center gap-2">
+            <TabsTrigger value="board" className="flex items-center gap-2 animate-fade-in stagger-1">
               🎯 Board
             </TabsTrigger>
-            <TabsTrigger value="ai" className="flex items-center gap-2">
+            <TabsTrigger value="ai" className="flex items-center gap-2 animate-fade-in stagger-2">
               🤖 AI Tools
             </TabsTrigger>
-            <TabsTrigger value="semester" className="flex items-center gap-2">
+            <TabsTrigger value="semester" className="flex items-center gap-2 animate-fade-in stagger-3">
               🎓 Semester
             </TabsTrigger>
-            <TabsTrigger value="export" className="flex items-center gap-2">
+            <TabsTrigger value="export" className="flex items-center gap-2 animate-fade-in stagger-4">
               📥 Export
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <TabsTrigger value="analytics" className="flex items-center gap-2 animate-fade-in stagger-5">
               📊 Analytics
             </TabsTrigger>
-            <TabsTrigger value="focus" className="flex items-center gap-2">
+            <TabsTrigger value="focus" className="flex items-center gap-2 animate-fade-in stagger-6">
               🍅 Focus
             </TabsTrigger>
-            <TabsTrigger value="achievements" className="flex items-center gap-2">
+            <TabsTrigger value="achievements" className="flex items-center gap-2 animate-fade-in stagger-7">
               <Trophy className="h-4 w-4" />
               Achievements
             </TabsTrigger>
