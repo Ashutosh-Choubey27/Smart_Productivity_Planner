@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { CalendarIcon, Plus, Save, AlertCircle } from 'lucide-react';
+import { CalendarIcon, Plus, Save, AlertCircle, Clock, Repeat, Award } from 'lucide-react';
 import { format } from 'date-fns';
 import { Task } from '@/contexts/TaskContext';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { VoiceTaskInput } from '@/components/VoiceTaskInput';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { validateTaskTitle, getTaskTitleError } from '@/utils/validation';
@@ -30,7 +32,17 @@ const taskSchema = z.object({
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
   priority: z.enum(['low', 'medium', 'high']),
   category: z.string().min(1, 'Category is required'),
-  dueDate: z.date().optional()
+  dueDate: z.date().optional(),
+  // New fields
+  recurringEnabled: z.boolean().optional(),
+  recurringFrequency: z.enum(['daily', 'weekly', 'monthly']).optional(),
+  recurringInterval: z.number().min(1).optional(),
+  timeBlockEnabled: z.boolean().optional(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  gradeEnabled: z.boolean().optional(),
+  gradeScore: z.string().optional(),
+  gradeNotes: z.string().optional(),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -91,7 +103,16 @@ export const TaskForm = ({
       description: '',
       priority: 'medium',
       category: defaultCategory || '',
-      dueDate: undefined
+      dueDate: undefined,
+      recurringEnabled: false,
+      recurringFrequency: 'weekly',
+      recurringInterval: 1,
+      timeBlockEnabled: false,
+      startTime: '',
+      endTime: '',
+      gradeEnabled: false,
+      gradeScore: '',
+      gradeNotes: '',
     }
   });
 
@@ -125,7 +146,20 @@ export const TaskForm = ({
       priority: data.priority,
       category: data.category === 'custom' ? customCategory.trim() : data.category,
       dueDate: data.dueDate,
-      completed: editingTask?.completed || false
+      completed: editingTask?.completed || false,
+      // Add new fields
+      recurring: data.recurringEnabled ? {
+        frequency: data.recurringFrequency || 'weekly',
+        interval: data.recurringInterval || 1,
+      } : undefined,
+      timeBlock: data.timeBlockEnabled && data.startTime && data.endTime ? {
+        startTime: data.startTime,
+        endTime: data.endTime,
+      } : undefined,
+      grade: data.gradeEnabled && data.gradeScore ? {
+        score: data.gradeScore,
+        notes: data.gradeNotes,
+      } : undefined,
     };
 
     // Generate subtasks automatically using AI for new tasks only
@@ -427,6 +461,204 @@ export const TaskForm = ({
                 </FormItem>
               )}
             />
+
+            {/* Advanced Features Section */}
+            <Separator className="my-4" />
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Advanced Options</h3>
+
+              {/* Recurring Task Toggle */}
+              <FormField
+                control={form.control}
+                name="recurringEnabled"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel className="flex items-center gap-2">
+                        <Repeat className="h-4 w-4" />
+                        Recurring Task
+                      </FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        Repeat this task automatically
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {/* Recurring Options */}
+              {form.watch('recurringEnabled') && (
+                <div className="grid grid-cols-2 gap-3 pl-8 animate-fade-in">
+                  <FormField
+                    control={form.control}
+                    name="recurringFrequency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Frequency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="recurringInterval"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Every</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* Time Block Toggle */}
+              <FormField
+                control={form.control}
+                name="timeBlockEnabled"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Time Block
+                      </FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        Schedule specific time for this task
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {/* Time Block Fields */}
+              {form.watch('timeBlockEnabled') && (
+                <div className="grid grid-cols-2 gap-3 pl-8 animate-fade-in">
+                  <FormField
+                    control={form.control}
+                    name="startTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Start Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="endTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">End Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* Grade Tracking Toggle (for completed tasks) */}
+              {editingTask?.completed && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="gradeEnabled"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel className="flex items-center gap-2">
+                            <Award className="h-4 w-4" />
+                            Add Grade
+                          </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            Track your score for this task
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Grade Fields */}
+                  {form.watch('gradeEnabled') && (
+                    <div className="space-y-3 pl-8 animate-fade-in">
+                      <FormField
+                        control={form.control}
+                        name="gradeScore"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Score</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="e.g., A, 95%, 9/10" 
+                                {...field} 
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="gradeNotes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Notes (Optional)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Additional notes..." 
+                                {...field} 
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
 
             <div className="flex gap-3 pt-4">
               <Button

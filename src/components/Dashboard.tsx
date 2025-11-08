@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, BookOpen, Trophy, Settings, Mic } from 'lucide-react';
+import { Plus, BookOpen, Trophy, Settings, Calendar as CalendarIconTab } from 'lucide-react';
 import { useTask, Task } from '@/contexts/TaskContext';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskForm } from '@/components/TaskForm';
@@ -20,6 +20,8 @@ import { DragDropTaskBoard } from '@/components/DragDropTaskBoard';
 import { SemesterPlanner } from '@/components/SemesterPlanner';
 import { ExportPanel } from '@/components/ExportPanel';
 import { MotivationalQuoteCard } from '@/components/MotivationalQuoteCard';
+import { CalendarView } from '@/components/CalendarView';
+import { SemesterGoals } from '@/components/SemesterGoals';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -193,28 +195,32 @@ export const Dashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="grid w-full grid-cols-8 mb-6">
+          <TabsList className="grid w-full grid-cols-9 mb-6">
             <TabsTrigger value="tasks" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Tasks
             </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <CalendarIconTab className="h-4 w-4" />
+              Calendar
+            </TabsTrigger>
             <TabsTrigger value="board" className="flex items-center gap-2">
               🎯 Board
-            </TabsTrigger>
-            <TabsTrigger value="ai" className="flex items-center gap-2">
-              🤖 AI Tools
             </TabsTrigger>
             <TabsTrigger value="semester" className="flex items-center gap-2">
               🎓 Semester
             </TabsTrigger>
-            <TabsTrigger value="export" className="flex items-center gap-2">
-              📥 Export
+            <TabsTrigger value="ai" className="flex items-center gap-2">
+              🤖 AI
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               📊 Analytics
             </TabsTrigger>
             <TabsTrigger value="focus" className="flex items-center gap-2">
               🍅 Focus
+            </TabsTrigger>
+            <TabsTrigger value="export" className="flex items-center gap-2">
+              📥 Export
             </TabsTrigger>
             <TabsTrigger value="achievements" className="flex items-center gap-2">
               <Trophy className="h-4 w-4" />
@@ -227,7 +233,7 @@ export const Dashboard = () => {
             {/* Stats */}
             <TaskStats />
             
-            {/* AI Suggestions */}
+            {/* AI Suggestions - ONLY HERE, removed from AI tab */}
             <AISuggestions />
 
             {/* Filters */}
@@ -296,6 +302,11 @@ export const Dashboard = () => {
             </div>
           </TabsContent>
 
+          {/* Calendar Tab */}
+          <TabsContent value="calendar" className="space-y-6 animate-enter">
+            <CalendarView />
+          </TabsContent>
+
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6 animate-enter">
             <TaskAnalytics />
@@ -316,12 +327,9 @@ export const Dashboard = () => {
             <DragDropTaskBoard />
           </TabsContent>
 
-          {/* AI Tools Tab */}
+          {/* AI Tools Tab - Removed duplicate AISuggestions */}
           <TabsContent value="ai" className="space-y-6 animate-enter">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AISuggestions />
-              <AISmartScheduler />
-            </div>
+            <AISmartScheduler />
             
             {/* Task Enhancement Tools */}
             {tasks.length > 0 && (
@@ -341,6 +349,7 @@ export const Dashboard = () => {
 
           {/* Semester Tab */}
           <TabsContent value="semester" className="space-y-6 animate-enter">
+            <SemesterGoals />
             <SemesterPlanner />
           </TabsContent>
 

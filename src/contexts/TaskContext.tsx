@@ -23,6 +23,21 @@ export interface Task {
   isAcademic?: boolean; // Flag to distinguish academic tasks from general tasks
   createdAt: Date;
   updatedAt: Date;
+  // New fields
+  recurring?: {
+    frequency: 'daily' | 'weekly' | 'monthly';
+    interval: number; // e.g., every 2 weeks
+    endDate?: Date;
+  };
+  timeBlock?: {
+    startTime: string; // HH:MM format
+    endTime: string; // HH:MM format
+  };
+  grade?: {
+    score: string; // e.g., "A", "85%", "9/10"
+    maxScore?: string;
+    notes?: string;
+  };
 }
 
 interface TaskContextType {

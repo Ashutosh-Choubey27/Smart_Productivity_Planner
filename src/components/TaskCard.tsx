@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, Calendar, Trash2, Edit, CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Clock, Calendar, Trash2, Edit, CheckCircle2, Circle, ChevronDown, ChevronUp, Repeat, Award } from 'lucide-react';
 import { Task, useTask } from '@/contexts/TaskContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -120,7 +120,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
       </CardHeader>
 
       <CardContent className="py-2">
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
           {task.category && (
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-primary"></div>
@@ -137,6 +137,30 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
             )}>
               <Calendar className="h-3 w-3" />
               <span>{dueDateInfo.text}</span>
+            </div>
+          )}
+
+          {/* Time Block Indicator */}
+          {task.timeBlock && (
+            <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+              <Clock className="h-3 w-3" />
+              <span>{task.timeBlock.startTime} - {task.timeBlock.endTime}</span>
+            </div>
+          )}
+
+          {/* Recurring Task Indicator */}
+          {task.recurring && (
+            <div className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
+              <Repeat className="h-3 w-3" />
+              <span>Every {task.recurring.interval} {task.recurring.frequency}</span>
+            </div>
+          )}
+
+          {/* Grade Badge */}
+          {task.completed && task.grade && (
+            <div className="flex items-center gap-1 text-success">
+              <Award className="h-3 w-3" />
+              <span className="font-medium">{task.grade.score}</span>
             </div>
           )}
         </div>
