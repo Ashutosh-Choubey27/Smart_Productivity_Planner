@@ -82,32 +82,32 @@ export const EnhancedDashboard: React.FC = () => {
 
       {/* Enhanced Navigation - Responsive Grid */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 w-full gap-1 animate-slide-in-top stagger-1">
-          <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 w-full gap-2 p-2 bg-card border border-border/50 shadow-lg rounded-xl backdrop-blur-sm animate-slide-in-top stagger-1">
+          <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm border border-border/30 rounded-lg hover:border-primary/50 transition-all duration-200 data-[state=active]:border-primary data-[state=active]:shadow-md">
             <LayoutDashboard className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="analytics" className="gap-1.5 text-xs sm:text-sm border border-border/30 rounded-lg hover:border-primary/50 transition-all duration-200 data-[state=active]:border-primary data-[state=active]:shadow-md">
             <BarChart3 className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Analytics</span>
           </TabsTrigger>
-          <TabsTrigger value="ai-tools" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="ai-tools" className="gap-1.5 text-xs sm:text-sm border border-border/30 rounded-lg hover:border-primary/50 transition-all duration-200 data-[state=active]:border-primary data-[state=active]:shadow-md">
             <Brain className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">AI Tools</span>
           </TabsTrigger>
-          <TabsTrigger value="focus" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="focus" className="gap-1.5 text-xs sm:text-sm border border-border/30 rounded-lg hover:border-primary/50 transition-all duration-200 data-[state=active]:border-primary data-[state=active]:shadow-md">
             <Zap className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Focus</span>
           </TabsTrigger>
-          <TabsTrigger value="habits" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="habits" className="gap-1.5 text-xs sm:text-sm border border-border/30 rounded-lg hover:border-primary/50 transition-all duration-200 data-[state=active]:border-primary data-[state=active]:shadow-md">
             <Target className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Habits</span>
           </TabsTrigger>
-          <TabsTrigger value="team" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="team" className="gap-1.5 text-xs sm:text-sm border border-border/30 rounded-lg hover:border-primary/50 transition-all duration-200 data-[state=active]:border-primary data-[state=active]:shadow-md">
             <Users className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Team</span>
           </TabsTrigger>
-          <TabsTrigger value="insights" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="insights" className="gap-1.5 text-xs sm:text-sm border border-border/30 rounded-lg hover:border-primary/50 transition-all duration-200 data-[state=active]:border-primary data-[state=active]:shadow-md">
             <Lightbulb className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Insights</span>
           </TabsTrigger>
