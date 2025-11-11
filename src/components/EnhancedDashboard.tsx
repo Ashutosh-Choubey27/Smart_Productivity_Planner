@@ -82,32 +82,32 @@ export const EnhancedDashboard: React.FC = () => {
 
       {/* Enhanced Navigation - Responsive Grid */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 w-full gap-1 animate-slide-in-top stagger-1">
-          <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 w-full gap-0 animate-slide-in-top stagger-1 p-1">
+          <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm relative border-r border-border/50 last:border-r-0">
             <LayoutDashboard className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="analytics" className="gap-1.5 text-xs sm:text-sm relative border-r border-border/50 last:border-r-0">
             <BarChart3 className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Analytics</span>
           </TabsTrigger>
-          <TabsTrigger value="ai-tools" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="ai-tools" className="gap-1.5 text-xs sm:text-sm relative border-r border-border/50 last:border-r-0">
             <Brain className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">AI Tools</span>
           </TabsTrigger>
-          <TabsTrigger value="focus" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="focus" className="gap-1.5 text-xs sm:text-sm relative border-r border-border/50 last:border-r-0">
             <Zap className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Focus</span>
           </TabsTrigger>
-          <TabsTrigger value="habits" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="habits" className="gap-1.5 text-xs sm:text-sm relative border-r border-border/50 last:border-r-0">
             <Target className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Habits</span>
           </TabsTrigger>
-          <TabsTrigger value="team" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="team" className="gap-1.5 text-xs sm:text-sm relative border-r border-border/50 last:border-r-0">
             <Users className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Team</span>
           </TabsTrigger>
-          <TabsTrigger value="insights" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="insights" className="gap-1.5 text-xs sm:text-sm relative border-r border-border/50 last:border-r-0">
             <Lightbulb className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline truncate">Insights</span>
           </TabsTrigger>
