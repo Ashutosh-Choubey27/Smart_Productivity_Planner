@@ -34,7 +34,9 @@ import {
   Calendar,
   Lightbulb,
   LogOut,
-  User
+  User,
+  Settings,
+  ExternalLink
 } from 'lucide-react';
 
 export const EnhancedDashboard: React.FC = () => {
@@ -71,6 +73,14 @@ export const EnhancedDashboard: React.FC = () => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => window.open('https://supabase.com/dashboard/project/soxtmznhpmbsndjcuhse/settings/functions', '_blank')}
+                className="cursor-pointer"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                <span>API Key Settings</span>
+                <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground" />
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={logout} className="text-destructive cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
