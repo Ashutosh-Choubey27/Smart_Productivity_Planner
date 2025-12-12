@@ -42,9 +42,9 @@ serve(async (req) => {
 });
 
 async function generateSmartSchedule(tasks: any[]) {
-  const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-  if (!geminiApiKey) {
-    throw new Error('Gemini API key not configured');
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    throw new Error('LOVABLE_API_KEY not configured');
   }
 
   const taskList = tasks.map((task, index) => 
@@ -86,37 +86,41 @@ Guidelines:
 - Provide clear reasoning for timing decisions`;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': geminiApiKey,
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 800,
-          }
-        }),
-      }
-    );
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Lovable AI error: ${response.status}`, errorText);
+      
+      if (response.status === 429) {
+        console.error('Rate limit exceeded');
+        return generateFallbackSchedule(tasks);
+      }
+      if (response.status === 402) {
+        console.error('Payment required - credits exhausted');
+        return generateFallbackSchedule(tasks);
+      }
+      
+      throw new Error(`Lovable AI error: ${response.status}`);
     }
 
     const data = await response.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const generatedText = data.choices?.[0]?.message?.content;
     
     if (!generatedText) {
-      throw new Error('No response from Gemini');
+      throw new Error('No response from Lovable AI');
     }
 
     // Parse JSON from response
@@ -133,20 +137,22 @@ Guidelines:
     throw new Error('Invalid response format');
 
   } catch (error) {
-    console.error('Gemini API error:', error);
-    
-    // Fallback schedule based on priority and order
-    return tasks.slice(0, 6).map((task, index) => {
-      const startTimes = ['9:00 AM', '11:00 AM', '1:00 PM', '2:30 PM', '4:00 PM', '4:45 PM'];
-      const durations = [2, 1.5, 1, 1.5, 1, 0.75];
-      
-      return {
-        task: task.title,
-        startTime: startTimes[index] || '9:00 AM',
-        duration: durations[index] || 1,
-        priority: task.priority,
-        reasoning: `Scheduled based on ${task.priority} priority and task order`
-      };
-    });
+    console.error('Lovable AI error:', error);
+    return generateFallbackSchedule(tasks);
   }
+}
+
+function generateFallbackSchedule(tasks: any[]) {
+  return tasks.slice(0, 6).map((task, index) => {
+    const startTimes = ['9:00 AM', '11:00 AM', '1:00 PM', '2:30 PM', '4:00 PM', '4:45 PM'];
+    const durations = [2, 1.5, 1, 1.5, 1, 0.75];
+    
+    return {
+      task: task.title,
+      startTime: startTimes[index] || '9:00 AM',
+      duration: durations[index] || 1,
+      priority: task.priority,
+      reasoning: `Scheduled based on ${task.priority} priority and task order`
+    };
+  });
 }
