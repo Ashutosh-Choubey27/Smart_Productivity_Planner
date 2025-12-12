@@ -46,13 +46,13 @@ serve(async (req) => {
 });
 
 async function generateTaskBreakdown(taskTitle: string, taskDescription: string = '') {
-  const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-  if (!geminiApiKey) {
-    console.error('Gemini API key not found in environment');
-    throw new Error('Gemini API key not configured');
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.error('LOVABLE_API_KEY not found in environment');
+    throw new Error('LOVABLE_API_KEY not configured');
   }
   
-  console.log('Using Gemini API to generate breakdown...');
+  console.log('Using Lovable AI Gateway to generate breakdown...');
 
   const prompt = `You are an AI-powered smart productivity planning assistant for students.
 Your goal is to analyze a given main task and generate practical, context-specific subtasks that help complete it efficiently.
@@ -92,42 +92,44 @@ Return ONLY a valid JSON array of strings with NO markdown formatting:
 ["First specific subtask", "Second specific subtask", "Third specific subtask"]`;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': geminiApiKey,
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.5,
-            maxOutputTokens: 500,
-          }
-        }),
-      }
-    );
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Gemini API error: ${response.status}`, errorText);
-      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+      console.error(`Lovable AI error: ${response.status}`, errorText);
+      
+      if (response.status === 429) {
+        console.error('Rate limit exceeded');
+        return generateSmartFallbackSubtasks(taskTitle, taskDescription);
+      }
+      if (response.status === 402) {
+        console.error('Payment required - credits exhausted');
+        return generateSmartFallbackSubtasks(taskTitle, taskDescription);
+      }
+      
+      throw new Error(`Lovable AI error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Gemini response received');
+    console.log('Lovable AI response received');
     
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const generatedText = data.choices?.[0]?.message?.content;
     console.log('AI response content:', generatedText);
     
     if (!generatedText) {
-      throw new Error('No response from Gemini');
+      throw new Error('No response from Lovable AI');
     }
 
     // Parse JSON from response
@@ -152,11 +154,10 @@ Return ONLY a valid JSON array of strings with NO markdown formatting:
     return validSubtasks;
 
   } catch (error) {
-    console.error('Gemini API error:', error);
+    console.error('Lovable AI error:', error);
     console.error('Error details:', error.message);
     console.log('Falling back to smart fallback function');
     
-    // Smarter fallback: Create context-aware subtasks based on task patterns
     return generateSmartFallbackSubtasks(taskTitle, taskDescription);
   }
 }
@@ -166,7 +167,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
   const lowerDesc = taskDescription.toLowerCase();
   const combined = `${lowerTitle} ${lowerDesc}`.trim();
   
-  // Extract specific subjects or topics from the task
   const extractSubject = () => {
     const subjects = ['physics', 'chemistry', 'biology', 'math', 'history', 'english', 'computer', 'science'];
     for (const subj of subjects) {
@@ -175,7 +175,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     return 'the topic';
   };
   
-  // Learning/Study tasks - highly specific
   if (lowerTitle.includes('learn') || lowerTitle.includes('study')) {
     const subject = extractSubject();
     
@@ -209,7 +208,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // GitHub/Upload/Repository tasks - very specific
   if (lowerTitle.includes('upload') || lowerTitle.includes('github') || lowerTitle.includes('repository') || lowerTitle.includes('push')) {
     const hasDoc = lowerDesc.includes('ppt') || lowerDesc.includes('pdf') || lowerDesc.includes('doc') || lowerDesc.includes('synopsis');
     
@@ -232,7 +230,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Assignment/Homework tasks - action specific
   if (lowerTitle.includes('assignment') || lowerTitle.includes('homework')) {
     const subject = extractSubject();
     
@@ -245,7 +242,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Exam/Test preparation - study focused
   if (lowerTitle.includes('exam') || lowerTitle.includes('test') || lowerTitle.includes('quiz')) {
     const subject = extractSubject();
     
@@ -259,7 +255,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Coding/Project tasks - technical steps
   if (lowerTitle.includes('project') || lowerTitle.includes('code') || lowerTitle.includes('develop') || lowerTitle.includes('build') || lowerTitle.includes('app')) {
     const tech = combined.includes('react') ? 'React' : combined.includes('python') ? 'Python' : 'the project';
     
@@ -273,7 +268,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Reading tasks - comprehension focused
   if (lowerTitle.includes('read') || lowerTitle.includes('book') || lowerTitle.includes('article')) {
     const material = lowerTitle.includes('chapter') ? 'chapter' : lowerTitle.includes('book') ? 'book' : 'material';
     
@@ -286,7 +280,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Writing tasks - composition focused
   if (lowerTitle.includes('write') || lowerTitle.includes('essay') || lowerTitle.includes('report') || lowerTitle.includes('paper')) {
     const type = lowerTitle.includes('essay') ? 'essay' : lowerTitle.includes('report') ? 'report' : 'paper';
     
@@ -300,7 +293,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Presentation tasks
   if (lowerTitle.includes('presentation') || lowerTitle.includes('ppt') || lowerTitle.includes('slides')) {
     return [
       `Research topic and collect relevant information`,
@@ -312,7 +304,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Practice/Exercise tasks
   if (lowerTitle.includes('practice') || lowerTitle.includes('exercise') || lowerTitle.includes('solve')) {
     const subject = extractSubject();
     
@@ -325,7 +316,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Research tasks
   if (lowerTitle.includes('research') || lowerTitle.includes('investigate')) {
     return [
       `Define research scope and key questions`,
@@ -337,7 +327,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Meeting/Discussion tasks
   if (lowerTitle.includes('meeting') || lowerTitle.includes('discuss') || lowerTitle.includes('call')) {
     return [
       `Prepare agenda items to discuss`,
@@ -348,7 +337,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Generic but MUCH more specific fallback based on verbs
   const hasAction = lowerTitle.match(/\b(complete|finish|do|make|prepare|submit)\b/);
   
   if (hasAction) {
@@ -361,7 +349,6 @@ function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: strin
     ];
   }
   
-  // Ultimate fallback - extract any meaningful words from title
   const meaningfulWords = taskTitle.split(' ').filter(w => w.length > 3);
   const taskFocus = meaningfulWords.slice(0, 2).join(' ') || 'this task';
   

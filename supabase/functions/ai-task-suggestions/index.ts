@@ -27,7 +27,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    // Get user_id and/or tasks from request body
     const { user_id, tasks: clientTasks, persist } = await req.json();
     
     if (!user_id && (!clientTasks || clientTasks.length === 0)) {
@@ -41,7 +40,6 @@ serve(async (req) => {
     if (Array.isArray(clientTasks) && clientTasks.length > 0) {
       tasks = clientTasks;
     } else if (user_id) {
-      // Fetch user's tasks to analyze patterns (DB)
       const { data: dbTasks, error: tasksError } = await supabaseClient
         .from('tasks')
         .select('*')
@@ -57,14 +55,9 @@ serve(async (req) => {
       tasks = dbTasks || [];
     }
 
-
-    // Analyze task patterns
     const analysis = analyzeTaskPatterns(tasks || []);
-    
-    // Generate AI suggestions using OpenAI
     const suggestions = await generateAISuggestions(analysis, tasks || []);
 
-    // Optionally store suggestions in database
     if (persist && user_id) {
       const suggestionPromises = suggestions.map(suggestion => 
         supabaseClient.from('task_suggestions').insert({
@@ -102,7 +95,6 @@ function analyzeTaskPatterns(tasks: any[]): TaskAnalysis {
   const completed = tasks.filter((t: any) => t.completed);
   const pending = tasks.filter((t: any) => !t.completed);
   
-  // Calculate average completion time for completed tasks
   const completionTimes = completed
     .map((t: any) => {
       const createdRaw = (t.created_at ?? t.createdAt ?? null);
@@ -111,7 +103,7 @@ function analyzeTaskPatterns(tasks: any[]): TaskAnalysis {
       const created = new Date(createdRaw).getTime();
       const completedAt = new Date(completedRaw).getTime();
       if (isNaN(created) || isNaN(completedAt)) return null;
-      return (completedAt - created) / (1000 * 60 * 60 * 24); // days
+      return (completedAt - created) / (1000 * 60 * 60 * 24);
     })
     .filter((v: number | null): v is number => typeof v === 'number');
   
@@ -119,7 +111,6 @@ function analyzeTaskPatterns(tasks: any[]): TaskAnalysis {
     ? completionTimes.reduce((a, b) => a + b, 0) / completionTimes.length 
     : 3;
 
-  // Find most active category
   const categoryCount: Record<string, number> = {};
   tasks.forEach((t: any) => {
     const cat = t.category || 'general';
@@ -129,7 +120,6 @@ function analyzeTaskPatterns(tasks: any[]): TaskAnalysis {
   const mostActiveCategory = Object.entries(categoryCount)
     .sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || 'work';
 
-  // Common priorities
   const priorityCount: Record<string, number> = {};
   tasks.forEach((t: any) => {
     const pr = t.priority || 'medium';
@@ -141,7 +131,6 @@ function analyzeTaskPatterns(tasks: any[]): TaskAnalysis {
     .slice(0, 2)
     .map(([priority]) => priority);
 
-  // Recent patterns (categories from last 10 tasks)
   const recentTasks = tasks.slice(0, 10);
   const recentCategories = [...new Set(recentTasks.map((t: any) => t.category || 'general'))];
 
@@ -156,9 +145,9 @@ function analyzeTaskPatterns(tasks: any[]): TaskAnalysis {
 }
 
 async function generateAISuggestions(analysis: TaskAnalysis, recentTasks: any[]) {
-  const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-  if (!geminiApiKey) {
-    throw new Error('Gemini API key not configured');
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    throw new Error('LOVABLE_API_KEY not configured');
   }
 
   const recentTaskTitles = recentTasks.slice(0, 10).map(t => t.title);
@@ -199,40 +188,43 @@ Return ONLY a JSON array of suggestions in this format:
 Types can be: productivity_optimization, skill_development, organization, wellness, habit_building`;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': geminiApiKey,
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 800,
-          }
-        }),
-      }
-    );
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Lovable AI error: ${response.status}`, errorText);
+      
+      if (response.status === 429) {
+        console.error('Rate limit exceeded');
+        return generateFallbackSuggestions(analysis);
+      }
+      if (response.status === 402) {
+        console.error('Payment required - credits exhausted');
+        return generateFallbackSuggestions(analysis);
+      }
+      
+      throw new Error(`Lovable AI error: ${response.status}`);
     }
 
     const data = await response.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const generatedText = data.choices?.[0]?.message?.content;
     
     if (!generatedText) {
-      throw new Error('No response from Gemini');
+      throw new Error('No response from Lovable AI');
     }
 
-    // Parse JSON from response
     const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       throw new Error('No JSON array found in response');
@@ -240,7 +232,6 @@ Types can be: productivity_optimization, skill_development, organization, wellne
 
     const suggestions = JSON.parse(jsonMatch[0]);
     
-    // Validate and ensure proper format
     return suggestions.map((s: any) => ({
       type: s.type || 'productivity_optimization',
       text: s.text || 'Focus on completing your pending tasks',
@@ -248,25 +239,27 @@ Types can be: productivity_optimization, skill_development, organization, wellne
     }));
 
   } catch (error) {
-    console.error('Gemini API error:', error);
-    
-    // Fallback suggestions based on analysis
-    return [
-      {
-        type: 'productivity_optimization',
-        text: `Focus on completing your ${analysis.pendingTasks} pending tasks, starting with ${analysis.commonPriorities[0]} priority items`,
-        confidence: 0.8
-      },
-      {
-        type: 'organization',
-        text: `Create a weekly review task for your ${analysis.mostActiveCategory} category to maintain momentum`,
-        confidence: 0.75
-      },
-      {
-        type: 'habit_building',
-        text: 'Set up a daily planning session to break down complex tasks into smaller, manageable steps',
-        confidence: 0.7
-      }
-    ];
+    console.error('Lovable AI error:', error);
+    return generateFallbackSuggestions(analysis);
   }
+}
+
+function generateFallbackSuggestions(analysis: TaskAnalysis) {
+  return [
+    {
+      type: 'productivity_optimization',
+      text: `Focus on completing your ${analysis.pendingTasks} pending tasks, starting with ${analysis.commonPriorities[0]} priority items`,
+      confidence: 0.8
+    },
+    {
+      type: 'organization',
+      text: `Create a weekly review task for your ${analysis.mostActiveCategory} category to maintain momentum`,
+      confidence: 0.75
+    },
+    {
+      type: 'habit_building',
+      text: 'Set up a daily planning session to break down complex tasks into smaller, manageable steps',
+      confidence: 0.7
+    }
+  ];
 }

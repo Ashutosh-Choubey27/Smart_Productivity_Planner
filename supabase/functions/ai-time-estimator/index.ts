@@ -42,9 +42,9 @@ serve(async (req) => {
 });
 
 async function generateTimeEstimation(taskTitle: string, taskDescription: string = '', taskCategory: string = '') {
-  const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-  if (!geminiApiKey) {
-    throw new Error('Gemini API key not configured');
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    throw new Error('LOVABLE_API_KEY not configured');
   }
 
   const prompt = `Estimate the time required to complete this task:
@@ -80,40 +80,43 @@ Guidelines:
 Be realistic and slightly conservative with estimates to account for unexpected challenges.`;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': geminiApiKey,
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 400,
-          }
-        }),
-      }
-    );
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Lovable AI error: ${response.status}`, errorText);
+      
+      if (response.status === 429) {
+        console.error('Rate limit exceeded');
+        return generateFallbackEstimation(taskTitle, taskCategory);
+      }
+      if (response.status === 402) {
+        console.error('Payment required - credits exhausted');
+        return generateFallbackEstimation(taskTitle, taskCategory);
+      }
+      
+      throw new Error(`Lovable AI error: ${response.status}`);
     }
 
     const data = await response.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const generatedText = data.choices?.[0]?.message?.content;
     
     if (!generatedText) {
-      throw new Error('No response from Gemini');
+      throw new Error('No response from Lovable AI');
     }
 
-    // Parse JSON from response
     const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No JSON found in response');
@@ -121,7 +124,6 @@ Be realistic and slightly conservative with estimates to account for unexpected 
 
     const estimation = JSON.parse(jsonMatch[0]);
     
-    // Validate and ensure proper format
     return {
       estimatedHours: typeof estimation.estimatedHours === 'number' ? estimation.estimatedHours : 2,
       confidence: typeof estimation.confidence === 'number' ? estimation.confidence : 0.7,
@@ -130,26 +132,28 @@ Be realistic and slightly conservative with estimates to account for unexpected 
     };
 
   } catch (error) {
-    console.error('Gemini API error:', error);
-    
-    // Fallback estimation based on task characteristics
-    const words = taskTitle.split(' ').length;
-    const hasComplexKeywords = /research|develop|build|create|design|analyze|implement|study|learn/.test(taskTitle.toLowerCase());
-    
-    let estimatedHours = 1.5; // Base estimate
-    if (words > 5) estimatedHours += 0.5;
-    if (hasComplexKeywords) estimatedHours *= 1.5;
-    if (taskCategory?.toLowerCase().includes('project')) estimatedHours *= 2;
-    
-    return {
-      estimatedHours: Math.round(estimatedHours * 2) / 2, // Round to nearest 0.5
-      confidence: 0.6,
-      breakdown: [
-        `Planning and preparation: ${Math.round(estimatedHours * 0.2 * 2) / 2} hours`,
-        `Main execution: ${Math.round(estimatedHours * 0.6 * 2) / 2} hours`,
-        `Review and completion: ${Math.round(estimatedHours * 0.2 * 2) / 2} hours`
-      ],
-      difficulty: estimatedHours > 3 ? 'Hard' : estimatedHours > 1.5 ? 'Medium' : 'Easy'
-    };
+    console.error('Lovable AI error:', error);
+    return generateFallbackEstimation(taskTitle, taskCategory);
   }
+}
+
+function generateFallbackEstimation(taskTitle: string, taskCategory: string = '') {
+  const words = taskTitle.split(' ').length;
+  const hasComplexKeywords = /research|develop|build|create|design|analyze|implement|study|learn/.test(taskTitle.toLowerCase());
+  
+  let estimatedHours = 1.5;
+  if (words > 5) estimatedHours += 0.5;
+  if (hasComplexKeywords) estimatedHours *= 1.5;
+  if (taskCategory?.toLowerCase().includes('project')) estimatedHours *= 2;
+  
+  return {
+    estimatedHours: Math.round(estimatedHours * 2) / 2,
+    confidence: 0.6,
+    breakdown: [
+      `Planning and preparation: ${Math.round(estimatedHours * 0.2 * 2) / 2} hours`,
+      `Main execution: ${Math.round(estimatedHours * 0.6 * 2) / 2} hours`,
+      `Review and completion: ${Math.round(estimatedHours * 0.2 * 2) / 2} hours`
+    ],
+    difficulty: estimatedHours > 3 ? 'Hard' : estimatedHours > 1.5 ? 'Medium' : 'Easy'
+  };
 }
