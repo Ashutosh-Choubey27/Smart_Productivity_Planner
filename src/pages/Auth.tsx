@@ -10,7 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [signupData, setSignupData] = useState({ email: '', password: '', name: '' });
@@ -55,15 +54,24 @@ const Auth = () => {
       await signup(signupData.email, signupData.password, signupData.name);
       toast({
         title: "Account created!",
-        description: "Welcome to Smart Productivity Planner.",
+        description: "Please check your email to confirm your account, or you can disable email confirmation in Supabase settings.",
       });
-      navigate('/');
     } catch (error) {
-      toast({
-        title: "Signup failed",
-        description: error instanceof Error ? error.message : "Could not create account",
-        variant: "destructive",
-      });
+      const errorMessage = error instanceof Error ? error.message : "Could not create account";
+      // Handle common errors
+      if (errorMessage.includes('already registered')) {
+        toast({
+          title: "Account exists",
+          description: "This email is already registered. Please login instead.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Signup failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +89,7 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full" onValueChange={(v) => setIsLogin(v === 'login')}>
+          <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>

@@ -1,16 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -26,66 +23,68 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on mount
-    const storedUser = localStorage.getItem('dummy_auth_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Dummy validation
-    if (!email || !password) {
-      throw new Error('Email and password are required');
-    }
-
-    const user = {
-      id: crypto.randomUUID(),
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      name: email.split('@')[0],
-    };
+      password,
+    });
 
-    localStorage.setItem('dummy_auth_user', JSON.stringify(user));
-    setUser(user);
+    if (error) {
+      throw new Error(error.message);
+    }
   };
 
   const signup = async (email: string, password: string, name: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const redirectUrl = `${window.location.origin}/`;
     
-    // Dummy validation
-    if (!email || !password || !name) {
-      throw new Error('All fields are required');
-    }
-
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
-    }
-
-    const user = {
-      id: crypto.randomUUID(),
+    const { error } = await supabase.auth.signUp({
       email,
-      name,
-    };
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: name,
+        },
+      },
+    });
 
-    localStorage.setItem('dummy_auth_user', JSON.stringify(user));
-    setUser(user);
+    if (error) {
+      throw new Error(error.message);
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem('dummy_auth_user');
-    setUser(null);
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw new Error(error.message);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, session, login, signup, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
