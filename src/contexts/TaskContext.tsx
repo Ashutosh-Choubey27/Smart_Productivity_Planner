@@ -96,19 +96,28 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
           variant: "destructive",
         });
       } else if (data) {
-        const mappedTasks: Task[] = data.map((task) => ({
-          id: task.id,
-          title: task.title,
-          description: task.description || '',
-          priority: task.priority as 'low' | 'medium' | 'high',
-          category: task.category,
-          dueDate: task.due_date ? new Date(task.due_date) : undefined,
-          completed: task.completed,
-          progress: task.completed ? 100 : 0,
-          isAcademic: task.is_academic,
-          createdAt: new Date(task.created_at),
-          updatedAt: new Date(task.updated_at),
-        }));
+        const mappedTasks: Task[] = data.map((task: any) => {
+          const subtasks = task.subtasks as Subtask[] || [];
+          const completedSubtasks = subtasks.filter(s => s.completed).length;
+          const progress = subtasks.length > 0 
+            ? Math.round((completedSubtasks / subtasks.length) * 100)
+            : (task.completed ? 100 : 0);
+          
+          return {
+            id: task.id,
+            title: task.title,
+            description: task.description || '',
+            priority: task.priority as 'low' | 'medium' | 'high',
+            category: task.category,
+            dueDate: task.due_date ? new Date(task.due_date) : undefined,
+            completed: task.completed,
+            progress,
+            subtasks,
+            isAcademic: task.is_academic,
+            createdAt: new Date(task.created_at),
+            updatedAt: new Date(task.updated_at),
+          };
+        });
         setTasks(mappedTasks);
       }
       setIsLoading(false);
@@ -151,7 +160,8 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
       category: taskData.category,
       due_date: taskData.dueDate?.toISOString(),
       completed: taskData.completed,
-      is_academic: taskData.isAcademic || false
+      is_academic: taskData.isAcademic || false,
+      subtasks: JSON.parse(JSON.stringify(taskData.subtasks || []))
     });
 
     if (error) {
@@ -195,6 +205,12 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
     const taskToUpdate = tasks.find(t => t.id === id);
     if (!taskToUpdate) return;
 
+    // Merge subtasks if updating
+    const existingSubtasks = taskToUpdate.subtasks || [];
+    const newSubtasks = updates.subtasks 
+      ? [...existingSubtasks, ...updates.subtasks]
+      : existingSubtasks;
+
     // Update in Supabase
     const { error } = await supabase.from('tasks').update({
       title: updates.title ?? taskToUpdate.title,
@@ -204,7 +220,8 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
       due_date: updates.dueDate?.toISOString() ?? taskToUpdate.dueDate?.toISOString(),
       completed: updates.completed ?? taskToUpdate.completed,
       completed_at: updates.completed ? new Date().toISOString() : null,
-      is_academic: updates.isAcademic ?? taskToUpdate.isAcademic ?? false
+      is_academic: updates.isAcademic ?? taskToUpdate.isAcademic ?? false,
+      subtasks: JSON.parse(JSON.stringify(newSubtasks))
     }).eq('id', id);
 
     if (error) {
@@ -217,10 +234,10 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
       return;
     }
 
-    // Update local state
+    // Update local state with merged subtasks
     setTasks(prev => prev.map(task =>
       task.id === id
-        ? { ...task, ...updates, updatedAt: new Date() }
+        ? { ...task, ...updates, subtasks: newSubtasks, updatedAt: new Date() }
         : task
     ));
   };
@@ -272,28 +289,45 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
     ));
   };
 
-  const toggleSubtask = (taskId: string, subtaskId: string) => {
-    setTasks(prev => prev.map(task => {
-      if (task.id === taskId && task.subtasks) {
-        const updatedSubtasks = task.subtasks.map(subtask =>
-          subtask.id === subtaskId
-            ? { ...subtask, completed: !subtask.completed }
-            : subtask
-        );
-        
-        const completedCount = updatedSubtasks.filter(s => s.completed).length;
-        const newProgress = Math.round((completedCount / updatedSubtasks.length) * 100);
-        
-        return {
-          ...task,
-          subtasks: updatedSubtasks,
-          progress: newProgress,
-          completed: newProgress === 100,
-          updatedAt: new Date()
-        };
-      }
-      return task;
-    }));
+  const toggleSubtask = async (taskId: string, subtaskId: string) => {
+    if (!user) return;
+    
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || !task.subtasks) return;
+
+    const updatedSubtasks = task.subtasks.map(subtask =>
+      subtask.id === subtaskId
+        ? { ...subtask, completed: !subtask.completed }
+        : subtask
+    );
+    
+    const completedCount = updatedSubtasks.filter(s => s.completed).length;
+    const newProgress = Math.round((completedCount / updatedSubtasks.length) * 100);
+    const newCompleted = newProgress === 100;
+
+    // Update in Supabase
+    const { error } = await supabase.from('tasks').update({
+      subtasks: JSON.parse(JSON.stringify(updatedSubtasks)),
+      completed: newCompleted,
+      completed_at: newCompleted ? new Date().toISOString() : null
+    }).eq('id', taskId);
+
+    if (error) {
+      console.error('Error updating subtask:', error);
+      return;
+    }
+
+    setTasks(prev => prev.map(t =>
+      t.id === taskId
+        ? {
+            ...t,
+            subtasks: updatedSubtasks,
+            progress: newProgress,
+            completed: newCompleted,
+            updatedAt: new Date()
+          }
+        : t
+    ));
   };
 
   const getTasksByPriority = (priority: Task['priority']) => {

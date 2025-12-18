@@ -135,6 +135,7 @@ export type Database = {
           id: string
           is_academic: boolean
           priority: string
+          subtasks: Json | null
           title: string
           updated_at: string
           user_id: string
@@ -149,6 +150,7 @@ export type Database = {
           id?: string
           is_academic?: boolean
           priority: string
+          subtasks?: Json | null
           title: string
           updated_at?: string
           user_id: string
@@ -163,6 +165,7 @@ export type Database = {
           id?: string
           is_academic?: boolean
           priority?: string
+          subtasks?: Json | null
           title?: string
           updated_at?: string
           user_id?: string

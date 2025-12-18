@@ -335,6 +335,7 @@ export const Dashboard = () => {
             {tasks.length > 0 && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <AITaskBreakdown 
+                  taskId={tasks.filter(t => !t.completed)[0]?.id}
                   taskTitle={tasks.filter(t => !t.completed)[0]?.title || "Sample Task"}
                   taskDescription={tasks.filter(t => !t.completed)[0]?.description}
                 />
