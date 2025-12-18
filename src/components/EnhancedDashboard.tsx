@@ -58,7 +58,7 @@ export const EnhancedDashboard: React.FC = () => {
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    {(user?.user_metadata?.full_name as string)?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -66,7 +66,7 @@ export const EnhancedDashboard: React.FC = () => {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.name}</p>
+                  <p className="text-sm font-medium leading-none">{(user?.user_metadata?.full_name as string) || user?.email?.split('@')[0]}</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user?.email}
                   </p>

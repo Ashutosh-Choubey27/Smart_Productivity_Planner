@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { validateTaskTitle, getTaskTitleError } from '@/utils/validation';
 import { useToast } from '@/hooks/use-toast';
-import { getLocalUserId } from '@/utils/userStorage';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './AuthContext';
 
 export interface Subtask {
   id: string;
@@ -18,23 +18,22 @@ export interface Task {
   category: string;
   dueDate?: Date;
   completed: boolean;
-  progress: number; // 0-100 percentage of completion
-  subtasks?: Subtask[]; // Auto-generated subtasks
-  isAcademic?: boolean; // Flag to distinguish academic tasks from general tasks
+  progress: number;
+  subtasks?: Subtask[];
+  isAcademic?: boolean;
   createdAt: Date;
   updatedAt: Date;
-  // New fields
   recurring?: {
     frequency: 'daily' | 'weekly' | 'monthly';
-    interval: number; // e.g., every 2 weeks
+    interval: number;
     endDate?: Date;
   };
   timeBlock?: {
-    startTime: string; // HH:MM format
-    endTime: string; // HH:MM format
+    startTime: string;
+    endTime: string;
   };
   grade?: {
-    score: string; // e.g., "A", "85%", "9/10"
+    score: string;
     maxScore?: string;
     notes?: string;
   };
@@ -51,6 +50,7 @@ interface TaskContextType {
   getTasksByCategory: (category: string) => Task[];
   getCompletedTasks: () => Task[];
   getPendingTasks: () => Task[];
+  isLoading: boolean;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -69,35 +69,64 @@ interface TaskProviderProps {
 
 export const TaskProvider = ({ children }: TaskProviderProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const localUserId = getLocalUserId();
+  const { user } = useAuth();
 
-  // Load tasks from localStorage on mount
+  // Load tasks from Supabase when user changes
   useEffect(() => {
-    const savedTasks = localStorage.getItem('productivity-planner-tasks');
-    if (savedTasks) {
-      try {
-        const parsedTasks = JSON.parse(savedTasks).map((task: any) => ({
-          ...task,
-          createdAt: new Date(task.createdAt),
-          updatedAt: new Date(task.updatedAt),
-          dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-          progress: typeof task.progress === 'number' ? task.progress : 0,
-          subtasks: Array.isArray(task.subtasks) ? task.subtasks : undefined
-        }));
-        setTasks(parsedTasks);
-      } catch (error) {
-        console.error('Error loading tasks from localStorage:', error);
-      }
+    if (!user) {
+      setTasks([]);
+      setIsLoading(false);
+      return;
     }
-  }, []);
 
-  // Save tasks to localStorage whenever tasks change
-  useEffect(() => {
-    localStorage.setItem('productivity-planner-tasks', JSON.stringify(tasks));
-  }, [tasks]);
+    const loadTasks = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'progress'> & { progress?: number }) => {
+      if (error) {
+        console.error('Error loading tasks:', error);
+        toast({
+          title: "Error loading tasks",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else if (data) {
+        const mappedTasks: Task[] = data.map((task) => ({
+          id: task.id,
+          title: task.title,
+          description: task.description || '',
+          priority: task.priority as 'low' | 'medium' | 'high',
+          category: task.category,
+          dueDate: task.due_date ? new Date(task.due_date) : undefined,
+          completed: task.completed,
+          progress: task.completed ? 100 : 0,
+          isAcademic: task.is_academic,
+          createdAt: new Date(task.created_at),
+          updatedAt: new Date(task.updated_at),
+        }));
+        setTasks(mappedTasks);
+      }
+      setIsLoading(false);
+    };
+
+    loadTasks();
+  }, [user]);
+
+  const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'progress'> & { progress?: number }) => {
+    if (!user) {
+      toast({
+        title: "Not logged in",
+        description: "Please log in to create tasks",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validate task title before adding
     const validation = validateTaskTitle(taskData.title);
     if (!validation.isValid) {
@@ -109,36 +138,47 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
       return;
     }
 
+    const newTaskId = crypto.randomUUID();
+    const now = new Date();
+
+    // Insert into Supabase first
+    const { error } = await supabase.from('tasks').insert({
+      id: newTaskId,
+      user_id: user.id,
+      title: taskData.title,
+      description: taskData.description,
+      priority: taskData.priority,
+      category: taskData.category,
+      due_date: taskData.dueDate?.toISOString(),
+      completed: taskData.completed,
+      is_academic: taskData.isAcademic || false
+    });
+
+    if (error) {
+      console.error('Error saving task:', error);
+      toast({
+        title: "Error creating task",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Add to local state after successful save
     const newTask: Task = {
       ...taskData,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: newTaskId,
+      createdAt: now,
+      updatedAt: now,
       progress: typeof taskData.progress === 'number' ? Math.max(0, Math.min(100, taskData.progress)) : 0,
     };
     
     setTasks(prev => [newTask, ...prev]);
-    
-    // Save to Supabase for AI analysis (with proper error handling)
-    supabase.from('tasks').insert({
-      id: newTask.id,
-      user_id: localUserId,
-      title: newTask.title,
-      description: newTask.description,
-      priority: newTask.priority,
-      category: newTask.category,
-      due_date: newTask.dueDate?.toISOString(),
-      completed: newTask.completed,
-      is_academic: newTask.isAcademic || false
-    }).then(({ error }) => {
-      if (error) {
-        console.error('Error saving task to Supabase:', error);
-        // Don't show error to user since localStorage still works
-      }
-    });
   };
 
-  const updateTask = (id: string, updates: Partial<Task>) => {
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    if (!user) return;
+
     // Validate title if it's being updated
     if (updates.title) {
       const validation = validateTaskTitle(updates.title);
@@ -152,51 +192,83 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
       }
     }
 
+    const taskToUpdate = tasks.find(t => t.id === id);
+    if (!taskToUpdate) return;
+
+    // Update in Supabase
+    const { error } = await supabase.from('tasks').update({
+      title: updates.title ?? taskToUpdate.title,
+      description: updates.description ?? taskToUpdate.description,
+      priority: updates.priority ?? taskToUpdate.priority,
+      category: updates.category ?? taskToUpdate.category,
+      due_date: updates.dueDate?.toISOString() ?? taskToUpdate.dueDate?.toISOString(),
+      completed: updates.completed ?? taskToUpdate.completed,
+      completed_at: updates.completed ? new Date().toISOString() : null,
+      is_academic: updates.isAcademic ?? taskToUpdate.isAcademic ?? false
+    }).eq('id', id);
+
+    if (error) {
+      console.error('Error updating task:', error);
+      toast({
+        title: "Error updating task",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Update local state
     setTasks(prev => prev.map(task =>
       task.id === id
         ? { ...task, ...updates, updatedAt: new Date() }
         : task
     ));
-    
-    // Update in Supabase using proper task ID
-    const taskToUpdate = tasks.find(t => t.id === id);
-    if (taskToUpdate) {
-      supabase.from('tasks').update({
-        title: updates.title || taskToUpdate.title,
-        description: updates.description !== undefined ? updates.description : taskToUpdate.description,
-        priority: updates.priority || taskToUpdate.priority,
-        category: updates.category || taskToUpdate.category,
-        due_date: updates.dueDate?.toISOString() || taskToUpdate.dueDate?.toISOString(),
-        completed: updates.completed !== undefined ? updates.completed : taskToUpdate.completed,
-        completed_at: updates.completed ? new Date().toISOString() : null,
-        is_academic: updates.isAcademic !== undefined ? updates.isAcademic : (taskToUpdate.isAcademic || false)
-      }).eq('id', id).then(({ error }) => {
-        if (error) console.error('Error updating task in Supabase:', error);
-      });
-    }
   };
 
-  const deleteTask = (id: string) => {
+  const deleteTask = async (id: string) => {
+    if (!user) return;
+
+    const { error } = await supabase.from('tasks').delete().eq('id', id);
+
+    if (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        title: "Error deleting task",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setTasks(prev => prev.filter(task => task.id !== id));
     
-    // Show success notification
     toast({
       title: "✅ Task Deleted",
       description: "Your task has been successfully removed",
       className: "bg-success border-success/50 text-white dark:bg-success dark:text-white backdrop-blur-md",
     });
-    
-    // Delete from Supabase as well
-    supabase.from('tasks').delete().eq('id', id).then(({ error }) => {
-      if (error) console.error('Error deleting task from Supabase:', error);
-    });
   };
 
-  const toggleTask = (id: string) => {
-    setTasks(prev => prev.map(task =>
-      task.id === id
-        ? { ...task, completed: !task.completed, updatedAt: new Date() }
-        : task
+  const toggleTask = async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task || !user) return;
+
+    const newCompleted = !task.completed;
+
+    const { error } = await supabase.from('tasks').update({
+      completed: newCompleted,
+      completed_at: newCompleted ? new Date().toISOString() : null
+    }).eq('id', id);
+
+    if (error) {
+      console.error('Error toggling task:', error);
+      return;
+    }
+
+    setTasks(prev => prev.map(t =>
+      t.id === id
+        ? { ...t, completed: newCompleted, updatedAt: new Date() }
+        : t
     ));
   };
 
@@ -209,7 +281,6 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
             : subtask
         );
         
-        // Calculate new progress based on completed subtasks
         const completedCount = updatedSubtasks.filter(s => s.completed).length;
         const newProgress = Math.round((completedCount / updatedSubtasks.length) * 100);
         
@@ -251,7 +322,8 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
     getTasksByPriority,
     getTasksByCategory,
     getCompletedTasks,
-    getPendingTasks
+    getPendingTasks,
+    isLoading
   };
 
   return (
