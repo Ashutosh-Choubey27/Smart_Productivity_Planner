@@ -9,15 +9,16 @@ import { getLocalUserId } from '@/utils/userStorage';
 import { isValidTaskTitle } from '@/utils/validation';
 
 interface TaskBreakdownProps {
+  taskId?: string;
   taskTitle: string;
   taskDescription?: string;
   onBreakdown?: (subtasks: string[]) => void;
 }
 
-export const AITaskBreakdown = ({ taskTitle, taskDescription, onBreakdown }: TaskBreakdownProps) => {
+export const AITaskBreakdown = ({ taskId, taskTitle, taskDescription, onBreakdown }: TaskBreakdownProps) => {
   const [loading, setLoading] = useState(false);
   const [subtasks, setSubtasks] = useState<string[]>([]);
-  const { addTask } = useTask();
+  const { addTask, updateTask } = useTask();
   const { toast } = useToast();
 
   const generateBreakdown = async () => {
@@ -62,38 +63,59 @@ export const AITaskBreakdown = ({ taskTitle, taskDescription, onBreakdown }: Tas
     }
   };
 
-  const addSubtask = (subtask: string) => {
-    addTask({
-      title: subtask,
-      description: `Subtask from: "${taskTitle}"`,
-      priority: 'medium',
-      category: 'Subtask',
-      completed: false,
-      progress: 0
-    });
-
-    toast({
-      title: "✓ Subtask Added!",
-      description: `"${subtask}" has been added to your tasks.`,
-      className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
-    });
-  };
-
-  const addAllSubtasks = () => {
-    subtasks.forEach(subtask => {
+  const addSubtask = (subtaskText: string) => {
+    if (taskId) {
+      // Add subtask to existing task
+      updateTask(taskId, {
+        subtasks: [
+          { id: crypto.randomUUID(), text: subtaskText, completed: false }
+        ]
+      });
+    } else {
+      // Create as separate task (fallback)
       addTask({
-        title: subtask,
+        title: subtaskText,
         description: `Subtask from: "${taskTitle}"`,
         priority: 'medium',
         category: 'Subtask',
         completed: false,
         progress: 0
       });
+    }
+
+    toast({
+      title: "✓ Subtask Added!",
+      description: `"${subtaskText}" has been added.`,
+      className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
     });
+  };
+
+  const addAllSubtasks = () => {
+    if (taskId) {
+      // Add all subtasks to existing task
+      const newSubtasks = subtasks.map(text => ({
+        id: crypto.randomUUID(),
+        text,
+        completed: false
+      }));
+      updateTask(taskId, { subtasks: newSubtasks });
+    } else {
+      // Create as separate tasks (fallback)
+      subtasks.forEach(subtask => {
+        addTask({
+          title: subtask,
+          description: `Subtask from: "${taskTitle}"`,
+          priority: 'medium',
+          category: 'Subtask',
+          completed: false,
+          progress: 0
+        });
+      });
+    }
 
     toast({
       title: "✓ All Subtasks Added!",
-      description: `Added ${subtasks.length} subtasks to your task list.`,
+      description: `Added ${subtasks.length} subtasks.`,
       className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
     });
 
