@@ -114,8 +114,8 @@ export const DragDropTaskBoard = () => {
                       {...provided.droppableProps}
                       ref={provided.innerRef}
                       className={cn(
-                        "min-h-[200px] space-y-3 p-2 rounded-lg transition-colors duration-200",
-                        snapshot.isDraggingOver && "bg-muted/50 border-2 border-dashed border-primary"
+                        "min-h-[200px] space-y-3 p-2 rounded-lg",
+                        snapshot.isDraggingOver ? "bg-muted/50 border-2 border-dashed border-primary" : "border-2 border-transparent"
                       )}
                     >
                       {column.tasks.length === 0 ? (
@@ -134,9 +134,13 @@ export const DragDropTaskBoard = () => {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
+                                style={{
+                                  ...provided.draggableProps.style,
+                                  // Disable transitions during drag to prevent lag
+                                  transition: snapshot.isDragging ? 'none' : 'box-shadow 0.2s ease',
+                                }}
                                 className={cn(
-                                  "transition-all duration-200",
-                                  snapshot.isDragging && "transform rotate-2 scale-105 shadow-lg"
+                                  snapshot.isDragging && "shadow-xl z-50 opacity-95"
                                 )}
                               >
                                 <TaskCard
