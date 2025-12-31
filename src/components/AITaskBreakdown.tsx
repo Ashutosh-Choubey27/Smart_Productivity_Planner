@@ -168,41 +168,50 @@ export const AITaskBreakdown = ({ taskId, taskTitle, taskDescription, onBreakdow
             </Button>
           </div>
         ) : (
-          <>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium">Suggested Subtasks:</p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-foreground">Suggested Subtasks</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                  {subtasks.length} steps
+                </span>
+              </div>
               <Button
-                variant="outline"
+                variant="default"
                 size="sm"
                 onClick={addAllSubtasks}
-                className="h-7 text-xs"
+                className="h-8 text-xs bg-gradient-primary hover:bg-primary-hover"
               >
                 <Plus className="h-3 w-3 mr-1" />
                 Add All
               </Button>
             </div>
-            {subtasks.map((subtask, index) => (
-              <div
-                key={index}
-                className="p-3 rounded-lg border bg-card/50 hover:bg-card/80 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <p className="text-sm text-foreground leading-relaxed flex-1">
-                    {index + 1}. {subtask}
+            
+            <div className="grid gap-2">
+              {subtasks.map((subtask, index) => (
+                <div
+                  key={index}
+                  className="group flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-all duration-200"
+                >
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-primary">{index + 1}</span>
+                  </div>
+                  <p className="text-sm text-foreground flex-1 leading-relaxed">
+                    {subtask}
                   </p>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => addSubtask(subtask)}
-                    className="h-7 text-xs ml-2"
+                    className="h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
                   >
                     <Plus className="h-3 w-3 mr-1" />
                     Add
                   </Button>
                 </div>
-              </div>
-            ))}
-          </>
+              ))}
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>

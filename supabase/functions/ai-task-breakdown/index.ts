@@ -54,7 +54,7 @@ async function generateTaskBreakdown(taskTitle: string, taskDescription: string 
   
   console.log('Using Lovable AI Gateway to generate breakdown...');
 
-  const prompt = `You are an AI-powered smart productivity planning assistant for students.
+const prompt = `You are an AI-powered smart productivity planning assistant for students.
 Your goal is to analyze a given main task and generate practical, context-specific subtasks that help complete it efficiently.
 
 TASK TO ANALYZE:
@@ -63,33 +63,29 @@ ${taskDescription ? `Description: "${taskDescription}"` : ''}
 
 CRITICAL INSTRUCTIONS:
 1. Understand what the main task is trying to achieve
-2. Break it into 3–7 meaningful subtasks (depending on complexity)
+2. ALWAYS generate EXACTLY 5 subtasks - no more, no less
 3. AVOID vague or generic steps like "Plan your work", "Do the task", "Set up resources", "Review and finalize"
 4. Each subtask MUST be action-oriented, starting with a VERB (Research, Review, Write, Debug, Test, Revise, Summarize, Create, Implement, Analyze, Practice, Study, Build, etc.)
 5. For STUDYING tasks: include smart learning steps (revision, testing, note summarization, practice problems, flashcards)
 6. For TECHNICAL tasks (coding, projects): include setup, development, testing, and documentation subtasks
-7. Keep each subtask short (max 12–15 words)
+7. Keep each subtask between 8-12 words for consistency
 8. Subtasks should be ordered logically to complete the main task
 
-EXAMPLES OF EXCELLENT SUBTASKS:
+EXAMPLES OF EXCELLENT SUBTASKS (always exactly 5):
 
 Task: "Learn React Hooks"
 ✅ PERFECT:
-["Read official React Hooks documentation and key concepts", "Watch tutorial video on useState and useEffect", "Build simple counter app using useState", "Create todo list with useEffect for persistence", "Practice useContext for state management", "Review and refactor code for best practices"]
+["Read official React Hooks documentation and key concepts", "Watch tutorial video on useState and useEffect hooks", "Build simple counter app using useState hook", "Create todo list with useEffect for data persistence", "Practice useContext for global state management"]
 
 Task: "Prepare for Physics Exam on Thermodynamics"
 ✅ PERFECT:
-["Review lecture notes on laws of thermodynamics", "Solve 10 numerical problems from textbook chapter 8", "Create summary sheet of key formulas and concepts", "Watch explanation videos on entropy and enthalpy", "Take practice test and identify weak areas", "Revise difficult topics and clarify doubts"]
-
-Task: "Build GitHub Profile README"
-✅ PERFECT:
-["Research best GitHub profile README examples", "Write introduction and skills section", "Add project showcase with descriptions and links", "Create visual elements using shields and stats", "Test README rendering on GitHub", "Proofread and publish final version"]
+["Review lecture notes on laws of thermodynamics thoroughly", "Solve ten numerical problems from textbook chapter eight", "Create summary sheet of key formulas and concepts", "Take practice test and identify weak topic areas", "Revise difficult topics and clarify remaining doubts"]
 
 ❌ NEVER DO THIS:
 ["Research and plan approach", "Set up necessary resources", "Complete the main components", "Review and finalize", "Document results"]
 
-Return ONLY a valid JSON array of strings with NO markdown formatting:
-["First specific subtask", "Second specific subtask", "Third specific subtask"]`;
+Return ONLY a valid JSON array with EXACTLY 5 strings, NO markdown:
+["First subtask here", "Second subtask here", "Third subtask here", "Fourth subtask here", "Fifth subtask here"]`;
 
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -151,7 +147,22 @@ Return ONLY a valid JSON array of strings with NO markdown formatting:
     const validSubtasks = subtasks.filter(s => typeof s === 'string' && s.length > 0);
     console.log('Valid subtasks count:', validSubtasks.length);
     
-    return validSubtasks;
+    // Ensure exactly 5 subtasks
+    if (validSubtasks.length > 5) {
+      return validSubtasks.slice(0, 5);
+    }
+    if (validSubtasks.length < 5 && validSubtasks.length > 0) {
+      // Pad with fallback subtasks if less than 5
+      const fallback = generateSmartFallbackSubtasks(taskTitle, taskDescription);
+      while (validSubtasks.length < 5 && fallback.length > 0) {
+        const next = fallback.shift();
+        if (next && !validSubtasks.includes(next)) {
+          validSubtasks.push(next);
+        }
+      }
+    }
+    
+    return validSubtasks.slice(0, 5);
 
   } catch (error) {
     console.error('Lovable AI error:', error);
