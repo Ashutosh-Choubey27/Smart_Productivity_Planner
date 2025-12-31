@@ -48,7 +48,6 @@ export const AITaskBreakdown = ({ taskId, taskTitle, taskDescription, onBreakdow
         toast({
           title: "✓ Task Breakdown Generated!",
           description: `Split "${taskTitle}" into ${validSubtasks.length} manageable subtasks.`,
-          className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
         });
       }
     } catch (error) {
@@ -56,7 +55,7 @@ export const AITaskBreakdown = ({ taskId, taskTitle, taskDescription, onBreakdow
       toast({
         title: "❌ Error",
         description: "Failed to generate task breakdown. Please try again.",
-        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -86,7 +85,6 @@ export const AITaskBreakdown = ({ taskId, taskTitle, taskDescription, onBreakdow
     toast({
       title: "✓ Subtask Added!",
       description: `"${subtaskText}" has been added.`,
-      className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
     });
   };
 
@@ -116,7 +114,6 @@ export const AITaskBreakdown = ({ taskId, taskTitle, taskDescription, onBreakdow
     toast({
       title: "✓ All Subtasks Added!",
       description: `Added ${subtasks.length} subtasks.`,
-      className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
     });
 
     setSubtasks([]);

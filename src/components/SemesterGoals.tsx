@@ -70,7 +70,6 @@ export const SemesterGoals = () => {
       toast({
         title: "⚠️ Title Required",
         description: "Please enter a goal title",
-        className: "bg-yellow-600 border-yellow-500 text-white",
       });
       return;
     }

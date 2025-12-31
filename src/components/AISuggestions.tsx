@@ -50,13 +50,11 @@ export const AISuggestions = () => {
         toast({
           title: "✓ AI Suggestions Generated!",
           description: `Generated ${mapped.length} new task suggestions based on your patterns.`,
-          className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
         });
       } else {
         toast({ 
           title: "ℹ️ No suggestions", 
           description: "AI did not return suggestions this time.",
-          className: "bg-blue-600 border-blue-500 text-white dark:bg-blue-600 dark:text-white backdrop-blur-md",
         });
       }
     } catch (error: any) {
@@ -64,7 +62,7 @@ export const AISuggestions = () => {
       toast({
         title: "❌ Error",
         description: error?.message || "Failed to generate AI suggestions. Please try again.",
-        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
+        variant: "destructive",
       });
     } finally {
       setRefreshing(false);
@@ -79,7 +77,6 @@ export const AISuggestions = () => {
         toast({
           title: "⚠️ Invalid Suggestion",
           description: "This AI suggestion doesn't meet our quality standards. Skipping...",
-          className: "bg-yellow-600 border-yellow-500 text-white dark:bg-yellow-600 dark:text-white backdrop-blur-md",
         });
         // Remove from UI only
         setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
@@ -102,14 +99,13 @@ export const AISuggestions = () => {
       toast({
         title: "✓ Suggestion Applied!",
         description: "The AI suggestion has been added to your tasks.",
-        className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
       });
     } catch (error) {
       console.error('Error applying suggestion:', error);
       toast({
         title: "❌ Error",
         description: "Failed to apply suggestion. Please try again.",
-        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -122,7 +118,6 @@ export const AISuggestions = () => {
     toast({ 
       title: "🗑️ Suggestion Dismissed", 
       description: "The suggestion has been removed.",
-      className: "bg-gray-600 border-gray-500 text-white dark:bg-gray-600 dark:text-white backdrop-blur-md",
     });
   };
 

@@ -110,7 +110,6 @@ export const Dashboard = () => {
     toast({
       title: "✓ Task created!",
       description: `"${taskData.title}" has been added to your tasks.`,
-      className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
     });
   };
 
@@ -120,7 +119,6 @@ export const Dashboard = () => {
       toast({
         title: "✓ Task updated!",
         description: `"${taskData.title}" has been updated.`,
-        className: "bg-blue-600 border-blue-500 text-white dark:bg-blue-600 dark:text-white backdrop-blur-md",
       });
       setEditingTask(undefined);
     }

@@ -41,13 +41,12 @@ export const ExportPanel = () => {
       toast({
         title: "✓ Export successful!",
         description: `Your tasks have been exported as ${fileName}`,
-        className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
       });
     } catch (error) {
       toast({
         title: "❌ Export failed",
         description: "There was an error exporting your tasks. Please try again.",
-        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
+        variant: "destructive",
       });
     }
   };

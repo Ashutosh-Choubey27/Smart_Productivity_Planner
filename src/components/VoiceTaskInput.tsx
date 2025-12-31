@@ -34,7 +34,7 @@ export const VoiceTaskInput = ({ onVoiceInput, disabled }: VoiceTaskInputProps) 
       toast({
         title: "❌ Voice Recognition Not Supported",
         description: "Your browser doesn't support voice recognition.",
-        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
+        variant: "destructive",
       });
       return;
     }
