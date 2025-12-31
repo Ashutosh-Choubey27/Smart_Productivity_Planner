@@ -49,7 +49,6 @@ export const AITimeEstimator = ({ taskTitle, taskDescription, taskCategory, onEs
         toast({
           title: "✓ Time Estimate Generated!",
           description: `Estimated ${data.estimation.estimatedHours} hours for "${taskTitle}"`,
-          className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
         });
       }
     } catch (error) {
@@ -57,7 +56,7 @@ export const AITimeEstimator = ({ taskTitle, taskDescription, taskCategory, onEs
       toast({
         title: "❌ Error",
         description: "Failed to generate time estimate. Please try again.",
-        className: "bg-red-600 border-red-500 text-white dark:bg-red-600 dark:text-white backdrop-blur-md",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);

@@ -135,7 +135,6 @@ export const TaskForm = ({
       toast({
         title: '⚠️ Please name your category',
         description: 'Enter a category name when selecting Custom.',
-        className: "bg-yellow-600 border-yellow-500 text-white dark:bg-yellow-600 dark:text-white backdrop-blur-md",
       });
       return;
     }
@@ -168,7 +167,6 @@ export const TaskForm = ({
         toast({
           title: "⏳ Creating task...",
           description: "Generating subtasks to help you track progress.",
-          className: "bg-blue-600 border-blue-500 text-white dark:bg-blue-600 dark:text-white backdrop-blur-md",
         });
 
         const { data: breakdownData, error } = await supabase.functions.invoke('ai-task-breakdown', {
@@ -192,7 +190,6 @@ export const TaskForm = ({
           toast({
             title: "✓ Task created!",
             description: `Generated ${subtasks.length} subtasks to track your progress.`,
-            className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
           });
         } else {
           taskData.progress = 0;
@@ -233,7 +230,6 @@ export const TaskForm = ({
       toast({
         title: "🎤 Voice input captured!",
         description: "Task title filled from voice input.",
-        className: "bg-green-600 border-green-500 text-white dark:bg-green-600 dark:text-white backdrop-blur-md",
       });
     }
   };
