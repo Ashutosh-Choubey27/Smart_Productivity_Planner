@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Draggable, DropResult } from 'react-beautiful-dnd';
+import { StrictModeDroppable } from './StrictModeDroppable';
 import { Task, useTask } from '@/contexts/TaskContext';
 import { TaskCard } from '@/components/TaskCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,8 +17,16 @@ interface Column {
   color: string;
 }
 
+// Custom style function to fix drop animation
+const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
+  // Disable all transitions during drag for smooth movement
+  transition: isDragging ? 'none' : 'transform 0.2s ease, box-shadow 0.2s ease',
+  // Apply the draggable style
+  ...draggableStyle,
+});
+
 export const DragDropTaskBoard = () => {
-  const { tasks, updateTask, toggleTask, deleteTask } = useTask();
+  const { tasks, toggleTask, deleteTask } = useTask();
   const { checkAchievements, userStats } = useAchievement();
   const [editingTask, setEditingTask] = useState<Task | undefined>();
 
@@ -108,14 +117,16 @@ export const DragDropTaskBoard = () => {
               </CardHeader>
 
               <CardContent>
-                <Droppable droppableId={column.id}>
+                <StrictModeDroppable droppableId={column.id}>
                   {(provided, snapshot) => (
                     <div
                       {...provided.droppableProps}
                       ref={provided.innerRef}
                       className={cn(
-                        "min-h-[200px] space-y-3 p-2 rounded-lg",
-                        snapshot.isDraggingOver ? "bg-muted/50 border-2 border-dashed border-primary" : "border-2 border-transparent"
+                        "min-h-[200px] space-y-3 p-2 rounded-lg transition-colors duration-200",
+                        snapshot.isDraggingOver 
+                          ? "bg-primary/10 border-2 border-dashed border-primary" 
+                          : "bg-muted/30 border-2 border-transparent"
                       )}
                     >
                       {column.tasks.length === 0 ? (
@@ -134,13 +145,13 @@ export const DragDropTaskBoard = () => {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                style={{
-                                  ...provided.draggableProps.style,
-                                  // Disable transitions during drag to prevent lag
-                                  transition: snapshot.isDragging ? 'none' : 'box-shadow 0.2s ease',
-                                }}
+                                style={getItemStyle(
+                                  snapshot.isDragging,
+                                  provided.draggableProps.style
+                                )}
                                 className={cn(
-                                  snapshot.isDragging && "shadow-xl z-50 opacity-95"
+                                  "select-none",
+                                  snapshot.isDragging && "shadow-2xl z-50 opacity-90 cursor-grabbing"
                                 )}
                               >
                                 <TaskCard
@@ -157,7 +168,7 @@ export const DragDropTaskBoard = () => {
                       {provided.placeholder}
                     </div>
                   )}
-                </Droppable>
+                </StrictModeDroppable>
               </CardContent>
             </Card>
           ))}
