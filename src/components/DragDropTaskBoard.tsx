@@ -159,6 +159,7 @@ export const DragDropTaskBoard = () => {
                                   onToggle={toggleTask}
                                   onEdit={handleEdit}
                                   onDelete={handleDelete}
+                                  showDragHandle={true}
                                 />
                               </div>
                             )}

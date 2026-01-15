@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, Calendar, Trash2, Edit, CheckCircle2, Circle, ChevronDown, ChevronUp, Repeat, Award } from 'lucide-react';
+import { Clock, Calendar, Trash2, Edit, CheckCircle2, Circle, ChevronDown, ChevronUp, Repeat, Award, GripVertical } from 'lucide-react';
 import { Task, useTask } from '@/contexts/TaskContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,9 +14,10 @@ interface TaskCardProps {
   onToggle: (id: string) => void;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
+  showDragHandle?: boolean;
 }
 
-export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) => {
+export const TaskCard = ({ task, onToggle, onEdit, onDelete, showDragHandle = false }: TaskCardProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showSubtasks, setShowSubtasks] = useState(true);
   const { toggleSubtask } = useTask();
@@ -81,6 +82,11 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
+          {showDragHandle && (
+            <div className="flex items-center justify-center py-1 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors">
+              <GripVertical className="h-5 w-5" />
+            </div>
+          )}
           <div className="flex items-start gap-3 flex-1">
             <Button
               variant="ghost"
