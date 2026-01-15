@@ -284,9 +284,9 @@ export const Dashboard = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 auto-rows-[280px]">
                   {filteredAndSortedTasks.map((task, index) => (
-                    <div key={task.id} className={`stagger-item stagger-${Math.min(index + 1, 8)}`}>
+                    <div key={task.id} className={`stagger-item stagger-${Math.min(index + 1, 8)} h-full`}>
                       <TaskCard
                         task={task}
                         onToggle={handleToggleTask}

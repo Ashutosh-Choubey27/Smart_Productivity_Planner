@@ -136,10 +136,10 @@ export const DragDropTaskBoard = () => {
                                 {...provided.dragHandleProps}
                                 style={{
                                   ...provided.draggableProps.style,
-                                  // Disable transitions during drag to prevent lag
                                   transition: snapshot.isDragging ? 'none' : 'box-shadow 0.2s ease',
                                 }}
                                 className={cn(
+                                  "h-[280px]",
                                   snapshot.isDragging && "shadow-xl z-50 opacity-95"
                                 )}
                               >
