@@ -18,7 +18,7 @@ interface TaskCardProps {
 
 export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showSubtasks, setShowSubtasks] = useState(true);
+  const [showSubtasks, setShowSubtasks] = useState(false); // Collapsed by default for consistent height
   const { toggleSubtask } = useTask();
 
   const getPriorityColor = (priority: Task['priority']) => {
@@ -73,7 +73,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
   return (
     <Card 
       className={cn(
-        'task-card animate-slide-in transition-all duration-300 hover-lift',
+        'task-card animate-slide-in transition-all duration-300 hover-lift h-full flex flex-col',
         getTaskCardClass(task.priority),
         task.completed && 'opacity-60',
         isDeleting && 'animate-slide-out opacity-0'
@@ -97,19 +97,17 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
             
             <div className="flex-1 min-w-0">
               <h3 className={cn(
-                "font-semibold text-sm leading-tight",
+                "font-semibold text-sm leading-tight line-clamp-1",
                 task.completed && "line-through text-muted-foreground"
               )}>
                 {task.title}
               </h3>
-              {task.description && (
-                <p className={cn(
-                  "text-sm text-muted-foreground mt-1 line-clamp-2",
-                  task.completed && "line-through"
-                )}>
-                  {task.description}
-                </p>
-              )}
+              <p className={cn(
+                "text-sm text-muted-foreground mt-1 line-clamp-1 min-h-[1.25rem]",
+                task.completed && "line-through"
+              )}>
+                {task.description || "No description"}
+              </p>
             </div>
           </div>
           
@@ -119,7 +117,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
         </div>
       </CardHeader>
 
-      <CardContent className="py-2">
+      <CardContent className="py-2 flex-1 flex flex-col">
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
           {task.category && (
             <div className="flex items-center gap-1">
@@ -165,7 +163,7 @@ export const TaskCard = ({ task, onToggle, onEdit, onDelete }: TaskCardProps) =>
           )}
         </div>
 
-        <div className="mt-3">
+        <div className="mt-3 flex-1 flex flex-col justify-end">
           <div className="flex items-center justify-between mb-1 text-xs">
             <span className="text-muted-foreground font-medium">Progress</span>
             <span className="font-semibold">{Math.round(task.progress ?? 0)}%</span>
