@@ -1,54 +1,60 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+  import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { user_id, tasks } = await req.json();
-    
-    if (!user_id || !tasks || !Array.isArray(tasks)) {
-      throw new Error('user_id and tasks array are required');
+  serve(async (req) => {
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
     }
 
-    console.log('Generating smart schedule for user:', user_id, '- Tasks:', tasks.length);
+    try {
+      const { user_id, tasks } = await req.json();
+      
+      if (!user_id || !tasks || !Array.isArray(tasks)) {
+        throw new Error('user_id and tasks array are required');
+      }
 
-    const schedule = await generateSmartSchedule(tasks);
+      console.log('Generating smart schedule for user:', user_id, '- Tasks:', tasks.length);
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      schedule
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      const schedule = await generateSmartSchedule(tasks);
 
-  } catch (error) {
-    console.error('Error in ai-smart-scheduler:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      success: false 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-});
+      return new Response(JSON.stringify({ 
+        success: true, 
+        schedule
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+
+    } catch (error) {
+       const message = error instanceof Error ? error.message : "Unknown error";
+      console.error('Error in ai-smart-scheduler:', error);
+      return new Response(JSON.stringify({ 
+        error: message,
+        success: false 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  });
 
 async function generateSmartSchedule(tasks: any[]) {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) {
-    throw new Error('LOVABLE_API_KEY not configured');
+  const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+
+  if (!GEMINI_API_KEY) {
+    console.error('GEMINI_API_KEY not configured, using fallback schedule');
+    return generateFallbackSchedule(tasks);
   }
 
   const taskList = tasks.map((task, index) => 
-    `${index + 1}. ${task.title} (${task.priority} priority, ${task.category}, ${task.dueDate ? 'Due: ' + new Date(task.dueDate).toLocaleDateString() : 'No due date'})`
+    `${index + 1}. ${task.title} (${task.priority} priority, ${task.category}, ${
+      task.dueDate || task.due_date 
+        ? 'Due: ' + new Date(task.dueDate || task.due_date).toLocaleDateString() 
+        : 'No due date'
+    })`
   ).join('\n');
 
   const prompt = `Create an optimized daily schedule for these tasks:
@@ -58,7 +64,7 @@ ${taskList}
 
 Create a smart schedule considering:
 1. Priority levels (high priority tasks should be scheduled earlier)
-2. Due dates (urgent tasks should be prioritized)  
+2. Due dates (urgent tasks should be prioritized)
 3. Energy levels (complex tasks in morning, easier tasks later)
 4. Time blocking (group similar tasks together)
 5. Realistic time estimates
@@ -77,82 +83,95 @@ Return ONLY a JSON array with this exact format:
 ]
 
 Guidelines:
-- startTime: Use 12-hour format (e.g., "9:00 AM", "2:30 PM")
-- duration: Hours as number (can be decimal like 1.5)
-- Schedule high-priority tasks in the morning when energy is high
-- Group similar tasks together for better focus
+- startTime: Use 12-hour format
+- duration: Hours as number
+- Schedule high-priority tasks in the morning
+- Group similar tasks together
 - Leave buffer time between complex tasks
 - Don't exceed 8 total hours
-- Provide clear reasoning for timing decisions`;
+- Return valid JSON only`;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'user', content: prompt }
-        ],
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 1200,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Lovable AI error: ${response.status}`, errorText);
-      
-      if (response.status === 429) {
-        console.error('Rate limit exceeded');
+      console.error(`Gemini API error: ${response.status}`, errorText);
+
+      if (response.status === 429 || response.status === 403 || response.status === 400) {
         return generateFallbackSchedule(tasks);
       }
-      if (response.status === 402) {
-        console.error('Payment required - credits exhausted');
-        return generateFallbackSchedule(tasks);
-      }
-      
-      throw new Error(`Lovable AI error: ${response.status}`);
+
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const generatedText = data.choices?.[0]?.message?.content;
-    
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
     if (!generatedText) {
-      throw new Error('No response from Lovable AI');
+      console.error('No response text from Gemini');
+      return generateFallbackSchedule(tasks);
     }
 
-    // Parse JSON from response
-    const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
+    const cleanedText = generatedText
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
+    const jsonMatch = cleanedText.match(/\[[\s\S]*\]/);
+
     if (jsonMatch) {
       const schedule = JSON.parse(jsonMatch[0]);
+
       if (Array.isArray(schedule)) {
-        return schedule.filter(item => 
-          item.task && item.startTime && typeof item.duration === 'number'
+        const validSchedule = schedule.filter(item =>
+          item.task &&
+          item.startTime &&
+          typeof item.duration === 'number'
         );
+
+        return validSchedule.length > 0 ? validSchedule : generateFallbackSchedule(tasks);
       }
     }
 
-    throw new Error('Invalid response format');
+    return generateFallbackSchedule(tasks);
 
   } catch (error) {
-    console.error('Lovable AI error:', error);
+    console.error('Gemini schedule generation error:', error);
     return generateFallbackSchedule(tasks);
   }
 }
 
-function generateFallbackSchedule(tasks: any[]) {
-  return tasks.slice(0, 6).map((task, index) => {
-    const startTimes = ['9:00 AM', '11:00 AM', '1:00 PM', '2:30 PM', '4:00 PM', '4:45 PM'];
-    const durations = [2, 1.5, 1, 1.5, 1, 0.75];
-    
-    return {
-      task: task.title,
-      startTime: startTimes[index] || '9:00 AM',
-      duration: durations[index] || 1,
-      priority: task.priority,
-      reasoning: `Scheduled based on ${task.priority} priority and task order`
-    };
-  });
-}
+  function generateFallbackSchedule(tasks: any[]) {
+    return tasks.slice(0, 6).map((task, index) => {
+      const startTimes = ['9:00 AM', '11:00 AM', '1:00 PM', '2:30 PM', '4:00 PM', '4:45 PM'];
+      const durations = [2, 1.5, 1, 1.5, 1, 0.75];
+      
+      return {
+        task: task.title,
+        startTime: startTimes[index] || '9:00 AM',
+        duration: durations[index] || 1,
+        priority: task.priority,
+        reasoning: `Scheduled based on ${task.priority} priority and task order`
+      };
+    });
+  }

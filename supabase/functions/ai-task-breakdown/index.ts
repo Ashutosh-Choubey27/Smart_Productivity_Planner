@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -34,9 +33,10 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in ai-task-breakdown:', error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error('Error in ai-task-breakdown:', message);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: message,
       success: false 
     }), {
       status: 500,
@@ -46,10 +46,10 @@ serve(async (req) => {
 });
 
 async function generateTaskBreakdown(taskTitle: string, taskDescription: string = '') {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) {
-    console.error('LOVABLE_API_KEY not found in environment');
-    throw new Error('LOVABLE_API_KEY not configured');
+  const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+  if (!GEMINI_API_KEY) {
+    console.error('GEMINI_API_KEY not configured, using fallback subtasks');
+    return generateSmartFallbackSubtasks(taskTitle, taskDescription);
   }
   
   console.log('Using Lovable AI Gateway to generate breakdown...');
@@ -87,91 +87,94 @@ Task: "Prepare for Physics Exam on Thermodynamics"
 Return ONLY a valid JSON array with EXACTLY 5 strings, NO markdown:
 ["First subtask here", "Second subtask here", "Third subtask here", "Fourth subtask here", "Fifth subtask here"]`;
 
-  try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
+ try {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'user', content: prompt }
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
         ],
+        generationConfig: {
+          temperature: 0.5,
+          maxOutputTokens: 1000,
+        },
       }),
-    });
+    }
+  );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Lovable AI error: ${response.status}`, errorText);
-      
-      if (response.status === 429) {
-        console.error('Rate limit exceeded');
-        return generateSmartFallbackSubtasks(taskTitle, taskDescription);
-      }
-      if (response.status === 402) {
-        console.error('Payment required - credits exhausted');
-        return generateSmartFallbackSubtasks(taskTitle, taskDescription);
-      }
-      
-      throw new Error(`Lovable AI error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log('Lovable AI response received');
-    
-    const generatedText = data.choices?.[0]?.message?.content;
-    console.log('AI response content:', generatedText);
-    
-    if (!generatedText) {
-      throw new Error('No response from Lovable AI');
-    }
-
-    // Parse JSON from response
-    const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      console.error('No JSON array found in response');
-      return generateSmartFallbackSubtasks(taskTitle, taskDescription);
-    }
-
-    const subtasks = JSON.parse(jsonMatch[0]);
-    console.log('Parsed subtasks:', subtasks);
-    
-    // Validate and ensure proper format
-    if (!Array.isArray(subtasks)) {
-      console.error('Response is not an array, using fallback');
-      return generateSmartFallbackSubtasks(taskTitle, taskDescription);
-    }
-    
-    const validSubtasks = subtasks.filter(s => typeof s === 'string' && s.length > 0);
-    console.log('Valid subtasks count:', validSubtasks.length);
-    
-    // Ensure exactly 5 subtasks
-    if (validSubtasks.length > 5) {
-      return validSubtasks.slice(0, 5);
-    }
-    if (validSubtasks.length < 5 && validSubtasks.length > 0) {
-      // Pad with fallback subtasks if less than 5
-      const fallback = generateSmartFallbackSubtasks(taskTitle, taskDescription);
-      while (validSubtasks.length < 5 && fallback.length > 0) {
-        const next = fallback.shift();
-        if (next && !validSubtasks.includes(next)) {
-          validSubtasks.push(next);
-        }
-      }
-    }
-    
-    return validSubtasks.slice(0, 5);
-
-  } catch (error) {
-    console.error('Lovable AI error:', error);
-    console.error('Error details:', error.message);
-    console.log('Falling back to smart fallback function');
-    
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`Gemini API error: ${response.status}`, errorText);
     return generateSmartFallbackSubtasks(taskTitle, taskDescription);
   }
+
+  const data = await response.json();
+  console.log("Gemini AI response received");
+
+  const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  console.log("AI response content:", generatedText);
+
+  if (!generatedText) {
+    console.error("No response text from Gemini");
+    return generateSmartFallbackSubtasks(taskTitle, taskDescription);
+  }
+
+  const cleanedText = generatedText
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
+
+  const jsonMatch = cleanedText.match(/\[[\s\S]*\]/);
+
+  if (!jsonMatch) {
+    console.error("No JSON array found in Gemini response");
+    return generateSmartFallbackSubtasks(taskTitle, taskDescription);
+  }
+
+  const subtasks = JSON.parse(jsonMatch[0]);
+  console.log("Parsed subtasks:", subtasks);
+
+  if (!Array.isArray(subtasks)) {
+    console.error("Gemini response is not an array, using fallback");
+    return generateSmartFallbackSubtasks(taskTitle, taskDescription);
+  }
+
+  const validSubtasks = subtasks.filter(
+    (subtask) =>
+      typeof subtask === "string" && subtask.trim().length > 0
+  );
+
+  console.log("Valid subtasks count:", validSubtasks.length);
+
+  if (validSubtasks.length >= 5) {
+    return validSubtasks.slice(0, 5);
+  }
+
+  const fallback = generateSmartFallbackSubtasks(taskTitle, taskDescription);
+
+  while (validSubtasks.length < 5 && fallback.length > 0) {
+    const next = fallback.shift();
+
+    if (next && !validSubtasks.includes(next)) {
+      validSubtasks.push(next);
+    }
+  }
+
+  return validSubtasks.slice(0, 5);
+} catch (error) {
+  console.error("Gemini task breakdown error:", error);
+  console.log("Falling back to smart fallback function");
+
+  return generateSmartFallbackSubtasks(taskTitle, taskDescription);
 }
+} 
 
 function generateSmartFallbackSubtasks(taskTitle: string, taskDescription: string = ''): string[] {
   const lowerTitle = taskTitle.toLowerCase();

@@ -1,10 +1,9 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface TaskAnalysis {
@@ -16,167 +15,212 @@ interface TaskAnalysis {
   recentPatterns: string[];
 }
 
+interface Suggestion {
+  type: string;
+  text: string;
+  confidence: number;
+}
+
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
     const { user_id, tasks: clientTasks, persist } = await req.json();
-    
+
     if (!user_id && (!clientTasks || clientTasks.length === 0)) {
-      throw new Error('Either user_id or tasks must be provided');
+      throw new Error("Either user_id or tasks must be provided");
     }
-    
-    console.log('Generating AI suggestions for local user:', user_id ?? 'anonymous');
-    
+
+    console.log("Generating AI suggestions for user:", user_id ?? "anonymous");
+
     let tasks: any[] = [];
-    
+
     if (Array.isArray(clientTasks) && clientTasks.length > 0) {
       tasks = clientTasks;
     } else if (user_id) {
       const { data: dbTasks, error: tasksError } = await supabaseClient
-        .from('tasks')
-        .select('*')
-        .eq('user_id', user_id)
-        .order('created_at', { ascending: false })
+        .from("tasks")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", { ascending: false })
         .limit(50);
-    
+
       if (tasksError) {
-        console.error('Error fetching tasks:', tasksError);
+        console.error("Error fetching tasks:", tasksError);
         throw tasksError;
       }
-    
+
       tasks = dbTasks || [];
     }
 
-    const analysis = analyzeTaskPatterns(tasks || []);
-    const suggestions = await generateAISuggestions(analysis, tasks || []);
+    const analysis = analyzeTaskPatterns(tasks);
+    const suggestions = await generateAISuggestions(analysis, tasks);
 
     if (persist && user_id) {
-      const suggestionPromises = suggestions.map(suggestion => 
-        supabaseClient.from('task_suggestions').insert({
-          user_id: user_id,
+      const suggestionPromises = suggestions.map((suggestion) =>
+        supabaseClient.from("task_suggestions").insert({
+          user_id,
           suggestion_type: suggestion.type,
           suggestion_text: suggestion.text,
-          confidence_score: suggestion.confidence
+          confidence_score: suggestion.confidence,
         })
       );
 
       await Promise.all(suggestionPromises);
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      suggestions,
-      analysis 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
+    return new Response(
+      JSON.stringify({
+        success: true,
+        suggestions,
+        analysis,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   } catch (error) {
-    console.error('Error in ai-task-suggestions:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      success: false 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    const message = error instanceof Error ? error.message : "Unknown error";
+
+    console.error("Error in ai-task-suggestions:", message);
+
+    return new Response(
+      JSON.stringify({
+        error: message,
+        success: false,
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 });
 
 function analyzeTaskPatterns(tasks: any[]): TaskAnalysis {
-  const completed = tasks.filter((t: any) => t.completed);
-  const pending = tasks.filter((t: any) => !t.completed);
-  
+  const completed = tasks.filter((task) => task.completed);
+  const pending = tasks.filter((task) => !task.completed);
+
   const completionTimes = completed
-    .map((t: any) => {
-      const createdRaw = (t.created_at ?? t.createdAt ?? null);
-      const completedRaw = (t.completed_at ?? t.completedAt ?? null);
+    .map((task) => {
+      const createdRaw = task.created_at ?? task.createdAt ?? null;
+      const completedRaw = task.completed_at ?? task.completedAt ?? null;
+
       if (!createdRaw || !completedRaw) return null;
+
       const created = new Date(createdRaw).getTime();
       const completedAt = new Date(completedRaw).getTime();
+
       if (isNaN(created) || isNaN(completedAt)) return null;
+
       return (completedAt - created) / (1000 * 60 * 60 * 24);
     })
-    .filter((v: number | null): v is number => typeof v === 'number');
-  
-  const avgCompletionTime = completionTimes.length > 0 
-    ? completionTimes.reduce((a, b) => a + b, 0) / completionTimes.length 
-    : 3;
+    .filter((value): value is number => typeof value === "number");
+
+  const averageCompletionTime =
+    completionTimes.length > 0
+      ? completionTimes.reduce((a, b) => a + b, 0) / completionTimes.length
+      : 3;
 
   const categoryCount: Record<string, number> = {};
-  tasks.forEach((t: any) => {
-    const cat = t.category || 'general';
-    categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+
+  tasks.forEach((task) => {
+    const category = task.category || "general";
+    categoryCount[category] = (categoryCount[category] || 0) + 1;
   });
-  
-  const mostActiveCategory = Object.entries(categoryCount)
-    .sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || 'work';
+
+  const mostActiveCategory =
+    Object.entries(categoryCount).sort(([, a], [, b]) => b - a)[0]?.[0] ||
+    "general";
 
   const priorityCount: Record<string, number> = {};
-  tasks.forEach((t: any) => {
-    const pr = t.priority || 'medium';
-    priorityCount[pr] = (priorityCount[pr] || 0) + 1;
+
+  tasks.forEach((task) => {
+    const priority = task.priority || "medium";
+    priorityCount[priority] = (priorityCount[priority] || 0) + 1;
   });
-  
+
   const commonPriorities = Object.entries(priorityCount)
-    .sort(([,a], [,b]) => (b as number) - (a as number))
+    .sort(([, a], [, b]) => b - a)
     .slice(0, 2)
     .map(([priority]) => priority);
 
   const recentTasks = tasks.slice(0, 10);
-  const recentCategories = [...new Set(recentTasks.map((t: any) => t.category || 'general'))];
+
+  const recentCategories = [
+    ...new Set(recentTasks.map((task) => task.category || "general")),
+  ];
 
   return {
     completedTasks: completed.length,
     pendingTasks: pending.length,
-    averageCompletionTime: Math.round(avgCompletionTime * 10) / 10,
+    averageCompletionTime: Math.round(averageCompletionTime * 10) / 10,
     mostActiveCategory,
     commonPriorities,
-    recentPatterns: recentCategories
+    recentPatterns: recentCategories,
   };
 }
 
-async function generateAISuggestions(analysis: TaskAnalysis, recentTasks: any[]) {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) {
-    throw new Error('LOVABLE_API_KEY not configured');
+async function generateAISuggestions(
+  analysis: TaskAnalysis,
+  recentTasks: any[]
+): Promise<Suggestion[]> {
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+
+  if (!GEMINI_API_KEY) {
+    console.error("GEMINI_API_KEY not configured, using fallback suggestions");
+    return generateFallbackSuggestions(analysis);
   }
 
-  const recentTaskTitles = recentTasks.slice(0, 10).map(t => t.title);
-  const pendingTasks = recentTasks.filter(t => !t.completed).slice(0, 5);
+  const recentTaskTitles = recentTasks
+    .slice(0, 10)
+    .map((task) => task.title)
+    .filter(Boolean);
 
-  const prompt = `Analyze this user's productivity patterns and generate 3-4 intelligent task suggestions:
+  const pendingTasks = recentTasks.filter((task) => !task.completed).slice(0, 5);
+
+  const prompt = `Analyze this user's productivity patterns and generate 3-4 intelligent task suggestions.
 
 USER ANALYSIS:
 - Completed tasks: ${analysis.completedTasks}
 - Pending tasks: ${analysis.pendingTasks}
 - Average completion time: ${analysis.averageCompletionTime} days
 - Most active category: ${analysis.mostActiveCategory}
-- Common priorities: ${analysis.commonPriorities.join(', ')}
-- Recent categories: ${analysis.recentPatterns.join(', ')}
+- Common priorities: ${analysis.commonPriorities.join(", ") || "medium"}
+- Recent categories: ${analysis.recentPatterns.join(", ") || "general"}
 
 RECENT TASKS:
-${recentTaskTitles.join('\n- ')}
+${recentTaskTitles.length > 0 ? recentTaskTitles.map((title) => `- ${title}`).join("\n") : "- No recent task titles available"}
 
 CURRENT PENDING TASKS:
-${pendingTasks.map(t => `${t.title} (${t.priority} priority, ${t.category})`).join('\n- ')}
+${
+  pendingTasks.length > 0
+    ? pendingTasks
+        .map(
+          (task) =>
+            `- ${task.title} (${task.priority || "medium"} priority, ${
+              task.category || "general"
+            })`
+        )
+        .join("\n")
+    : "- No pending tasks available"
+}
 
-Generate 3-4 actionable task suggestions that:
-1. Complement their existing workflow
+Generate 3-4 actionable suggestions that:
+1. Complement the user's existing workflow
 2. Help reduce pending tasks
 3. Introduce productive habits
 4. Are specific and actionable
-5. Match their preferred categories and priorities
+5. Match the user's categories and priorities
 
-Return ONLY a JSON array of suggestions in this format:
+Return ONLY a valid JSON array with this exact format:
 [
   {
     "type": "productivity_optimization",
@@ -185,81 +229,114 @@ Return ONLY a JSON array of suggestions in this format:
   }
 ]
 
-Types can be: productivity_optimization, skill_development, organization, wellness, habit_building`;
+Allowed types:
+productivity_optimization, skill_development, organization, wellness, habit_building`;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'user', content: prompt }
-        ],
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.5,
+            maxOutputTokens: 1200,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Lovable AI error: ${response.status}`, errorText);
-      
-      if (response.status === 429) {
-        console.error('Rate limit exceeded');
-        return generateFallbackSuggestions(analysis);
-      }
-      if (response.status === 402) {
-        console.error('Payment required - credits exhausted');
-        return generateFallbackSuggestions(analysis);
-      }
-      
-      throw new Error(`Lovable AI error: ${response.status}`);
+      console.error(`Gemini API error: ${response.status}`, errorText);
+      return generateFallbackSuggestions(analysis);
     }
 
     const data = await response.json();
-    const generatedText = data.choices?.[0]?.message?.content;
-    
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
     if (!generatedText) {
-      throw new Error('No response from Lovable AI');
+      console.error("No response text from Gemini");
+      return generateFallbackSuggestions(analysis);
     }
 
-    const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
+    const cleanedText = generatedText
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const jsonMatch = cleanedText.match(/\[[\s\S]*\]/);
+
     if (!jsonMatch) {
-      throw new Error('No JSON array found in response');
+      console.error("No JSON array found in Gemini response");
+      return generateFallbackSuggestions(analysis);
     }
 
-    const suggestions = JSON.parse(jsonMatch[0]);
-    
-    return suggestions.map((s: any) => ({
-      type: s.type || 'productivity_optimization',
-      text: s.text || 'Focus on completing your pending tasks',
-      confidence: s.confidence || 0.7
-    }));
+    const parsedSuggestions = JSON.parse(jsonMatch[0]);
 
+    if (!Array.isArray(parsedSuggestions)) {
+      return generateFallbackSuggestions(analysis);
+    }
+
+    const suggestions = parsedSuggestions
+      .filter((suggestion) => suggestion && typeof suggestion === "object")
+      .map((suggestion) => ({
+        type:
+          typeof suggestion.type === "string"
+            ? suggestion.type
+            : "productivity_optimization",
+        text:
+          typeof suggestion.text === "string"
+            ? suggestion.text
+            : "Focus on completing your pending tasks with better prioritization",
+        confidence:
+          typeof suggestion.confidence === "number"
+            ? suggestion.confidence
+            : 0.7,
+      }))
+      .filter((suggestion) => suggestion.text.trim().length > 0);
+
+    return suggestions.length > 0
+      ? suggestions.slice(0, 4)
+      : generateFallbackSuggestions(analysis);
   } catch (error) {
-    console.error('Lovable AI error:', error);
+    console.error("Gemini suggestion generation error:", error);
     return generateFallbackSuggestions(analysis);
   }
 }
 
-function generateFallbackSuggestions(analysis: TaskAnalysis) {
+function generateFallbackSuggestions(analysis: TaskAnalysis): Suggestion[] {
+  const priority = analysis.commonPriorities[0] || "medium";
+  const category = analysis.mostActiveCategory || "general";
+
   return [
     {
-      type: 'productivity_optimization',
-      text: `Focus on completing your ${analysis.pendingTasks} pending tasks, starting with ${analysis.commonPriorities[0]} priority items`,
-      confidence: 0.8
+      type: "productivity_optimization",
+      text: `Focus on completing your ${analysis.pendingTasks} pending tasks, starting with ${priority} priority items.`,
+      confidence: 0.8,
     },
     {
-      type: 'organization',
-      text: `Create a weekly review task for your ${analysis.mostActiveCategory} category to maintain momentum`,
-      confidence: 0.75
+      type: "organization",
+      text: `Create a weekly review task for your ${category} category to maintain consistent progress.`,
+      confidence: 0.75,
     },
     {
-      type: 'habit_building',
-      text: 'Set up a daily planning session to break down complex tasks into smaller, manageable steps',
-      confidence: 0.7
-    }
+      type: "habit_building",
+      text: "Set up a daily planning session to break down complex tasks into smaller milestones.",
+      confidence: 0.72,
+    },
+    {
+      type: "wellness",
+      text: "Add short focus breaks between demanding tasks to maintain energy and reduce burnout.",
+      confidence: 0.68,
+    },
   ];
 }
