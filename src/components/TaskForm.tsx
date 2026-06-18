@@ -179,7 +179,9 @@ export const TaskForm = ({
 
         if (!error && breakdownData?.subtasks && Array.isArray(breakdownData.subtasks)) {
           const subtasks = breakdownData.subtasks.map((text: string) => ({
-            id: crypto.randomUUID(),
+            id: typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+                 ? crypto.randomUUID()
+                 : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
             text,
             completed: false
           }));
