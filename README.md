@@ -179,6 +179,8 @@ https://smart-productivity-planner-five.vercel.app/
 
 ![Core Modules](screenshots/core-module.png)
 
+---
+
 ## 📂 Project Structure
 
 ![Project Structure](screenshots/folder.png)
