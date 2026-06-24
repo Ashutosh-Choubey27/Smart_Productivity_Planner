@@ -232,11 +232,7 @@ const Auth = () => {
             <Card className="relative overflow-hidden border-white/10 bg-white/[0.07] shadow-2xl shadow-black/40 backdrop-blur-2xl before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-transparent before:content-[''] before:pointer-events-none before:-z-10">
               <div className="relative">
                 <CardHeader className="space-y-4 pb-4">
-                  <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-slate-300">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-300" />
-                    Secure AI workspace
-                  </div>
-
+                  
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-primary/20">
                     <Target className="h-6 w-6" />
                   </div>
