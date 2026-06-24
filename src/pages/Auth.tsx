@@ -140,9 +140,7 @@ const Auth = () => {
       <div className="relative z-10 grid min-h-full grid-cols-1 lg:grid-cols-[1fr_0.82fr]">
         <section className="relative hidden px-8 py-8 lg:flex lg:flex-col lg:justify-between xl:px-16">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-2xl backdrop-blur">
-              <Sparkles className="h-5 w-5 text-primary" />
-            </div>
+            <img src="/public/logo.png" alt="" height="70px" width="70px"/>
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.32em] text-white/50">
                 AI Productivity OS
@@ -231,11 +229,13 @@ const Auth = () => {
 
             <Card className="relative overflow-hidden border-white/10 bg-white/[0.07] shadow-2xl shadow-black/40 backdrop-blur-2xl before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-transparent before:content-[''] before:pointer-events-none before:-z-10">
               <div className="relative">
-                <CardHeader className="space-y-4 pb-4">
+                <CardHeader className="mb-3 pb-1">
+
+                  { <div className="mx-auto flex h-22 w-22 items-center justify-center  ">
+                    <img src="/public/another_logo.png" alt="" height="80px" width="80x"/>
+                  </div> }
+
                   
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-primary/20">
-                    <Target className="h-6 w-6" />
-                  </div>
 
                   <CardTitle className="text-center text-2xl font-bold text-white">
                     Welcome to your planner
